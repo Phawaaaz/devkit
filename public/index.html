@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'none'; base-uri 'none'">
+<title>DevKit – Developer Tools</title>
+<meta name="description" content="JSON, JWT, Base64, URL, timestamps, UUIDs, hashes, regex, cron and passwords. Runs entirely in your browser; nothing you paste leaves the page.">
+<meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root {
+  --bg: #0d1117; --panel: #151b23; --panel-2: #1c2430; --line: #29313d; --text: #e6edf3; --muted: #8b96a5;
+  --accent: #4ade80; --accent-ink: #052e16; --accent-soft: rgba(74,222,128,.12); --err: #f87171; --err-soft: rgba(248,113,113,.12);
+  --warn: #fbbf24; --mark: rgba(250,204,21,.35);
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #f7f8fa; --panel: #ffffff; --panel-2: #f0f2f5; --line: #dde1e7; --text: #16191d; --muted: #5e6875;
+  --accent: #15803d; --accent-ink: #ffffff; --accent-soft: rgba(21,128,61,.1); --err: #c42b2b; --err-soft: rgba(196,43,43,.08);
+  --warn: #a16207; --mark: rgba(250,204,21,.45); color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f7f8fa; --panel: #ffffff; --panel-2: #f0f2f5; --line: #dde1e7; --text: #16191d; --muted: #5e6875;
+    --accent: #15803d; --accent-ink: #ffffff; --accent-soft: rgba(21,128,61,.1); --err: #c42b2b; --err-soft: rgba(196,43,43,.08);
+    --warn: #a16207; --mark: rgba(250,204,21,.45); color-scheme: light;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); }
+.app { display: grid; grid-template-columns: 248px 1fr; min-height: 100%; }
+
+/* Sidebar */
+.side { border-right: 1px solid var(--line); padding: 18px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 750; font-size: 18px; padding: 0 6px; text-decoration: none; color: var(--text); }
+.logo img { width: 28px; height: 28px; }
+.find { position: relative; }
+.find input { width: 100%; height: 36px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); padding: 0 34px 0 11px; outline: none; }
+.find input:focus { border-color: var(--accent); }
+.find kbd { position: absolute; right: 8px; top: 8px; }
+kbd { font: 11px var(--mono); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; color: var(--muted); background: var(--panel-2); }
+.nav { display: grid; gap: 2px; }
+.nav a { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 9px; color: var(--text); text-decoration: none; font-size: 14.5px; }
+.nav a:hover { background: var(--panel-2); }
+.nav a[aria-current] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav a span { width: 26px; height: 22px; border-radius: 6px; background: var(--panel-2); display: grid; place-items: center; font: 600 10.5px var(--mono); color: var(--muted); flex: none; }
+.nav a[aria-current] span { background: var(--accent); color: var(--accent-ink); }
+.side-foot { margin-top: auto; font-size: 12.5px; color: var(--muted); padding: 0 6px; display: grid; gap: 10px; }
+.lock { display: flex; gap: 8px; align-items: flex-start; }
+.lock svg { flex: none; margin-top: 2px; color: var(--accent); }
+.theme { justify-self: start; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 4px 10px; font-size: 12.5px; }
+
+/* Main */
+main { padding: 28px 32px 60px; max-width: 1100px; width: 100%; min-width: 0; }
+.head h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+.head p { margin: 4px 0 20px; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; min-width: 0; display: flex; flex-direction: column; }
+.box-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); font-weight: 600; min-height: 44px; flex-wrap: wrap; }
+.box-head .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+textarea, .out { width: 100%; min-height: 320px; flex: 1; border: 0; background: transparent; padding: 12px 14px; font: 13.5px/1.55 var(--mono); outline: none; resize: vertical; white-space: pre-wrap; word-break: break-all; margin: 0; tab-size: 2; }
+.out { overflow: auto; }
+.out.small, textarea.small { min-height: 120px; }
+.btn { height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.input { height: 40px; width: 100%; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); padding: 0 12px; font: 14px var(--mono); outline: none; }
+.input:focus, textarea:focus { border-color: var(--accent); }
+.box textarea:focus { box-shadow: inset 0 0 0 1px var(--accent); border-radius: 0 0 12px 12px; }
+.status { margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-size: 14px; background: var(--accent-soft); color: var(--accent); }
+.status.err { background: var(--err-soft); color: var(--err); }
+.status.warn { background: rgba(251,191,36,.12); color: var(--warn); }
+.status:empty { display: none; }
+.kv { display: grid; grid-template-columns: max-content 1fr auto; gap: 0; font-size: 14px; }
+.kv > * { padding: 9px 14px; border-top: 1px solid var(--line); min-width: 0; }
+.kv > :nth-child(-n+3) { border-top: 0; }
+.kv .k { color: var(--muted); font-weight: 600; font-size: 13px; }
+.kv .v { font-family: var(--mono); word-break: break-all; }
+.copy { border: 0; background: none; color: var(--muted); padding: 2px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.copy:hover { color: var(--accent); background: var(--accent-soft); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.row label { font-size: 13.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.stack { display: grid; gap: 16px; }
+mark { background: var(--mark); color: inherit; border-radius: 3px; }
+.big { font: 600 22px/1.4 var(--mono); word-break: break-all; padding: 16px; }
+.pill { font: 600 12px var(--mono); padding: 2px 8px; border-radius: 99px; background: var(--panel-2); color: var(--muted); }
+.pill.ok { background: var(--accent-soft); color: var(--accent); }
+.pill.bad { background: var(--err-soft); color: var(--err); }
+.list { margin: 0; padding: 4px 0; list-style: none; font: 14px var(--mono); }
+.list li { padding: 7px 14px; display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); }
+.list li:first-child { border-top: 0; }
+.list li small { color: var(--muted); font-family: inherit; }
+.meter { height: 6px; border-radius: 9px; background: var(--panel-2); overflow: hidden; margin: 0 16px 14px; }
+.meter i { display: block; height: 100%; background: var(--accent); }
+input[type=range] { accent-color: var(--accent); width: 200px; }
+input[type=checkbox] { accent-color: var(--accent); }
+.home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.home-grid a { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; text-decoration: none; color: var(--text); display: grid; gap: 6px; }
+.home-grid a:hover { border-color: var(--accent); }
+.home-grid b { display: flex; gap: 10px; align-items: center; }
+.home-grid b span { font: 600 10.5px var(--mono); background: var(--panel-2); color: var(--muted); border-radius: 6px; padding: 3px 6px; }
+.home-grid small { color: var(--muted); font-size: 13.5px; }
+.hero { margin-bottom: 24px; }
+.hero h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -.02em; }
+.hero p { color: var(--muted); margin: 0; max-width: 620px; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 10px); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; opacity: 0; transition: .18s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 820px) {
+  .app { grid-template-columns: 1fr; }
+  .side { position: sticky; top: 0; z-index: 4; height: auto; background: var(--bg); border-right: 0; border-bottom: 1px solid var(--line); padding: 12px 16px 10px; gap: 10px; }
+  .side-top { display: flex; gap: 12px; align-items: center; }
+  .side-top .find { flex: 1; }
+  .find kbd, .side-foot { display: none; }
+  .nav { display: flex; overflow-x: auto; scrollbar-width: none; gap: 6px; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: none; border: 1px solid var(--line); padding: 5px 10px; font-size: 13.5px; }
+  .nav a span { display: none; }
+  main { padding: 20px 16px 48px; }
+  .grid2 { grid-template-columns: 1fr; }
+  textarea, .out { min-height: 200px; }
+  .kv { grid-template-columns: 1fr auto; }
+  .kv .k { grid-column: 1 / 3; padding-bottom: 0; }
+  .kv > :nth-child(3n+2), .kv > :nth-child(3n) { border-top: 0; }
+  .kv > :nth-child(3n+1) { border-top: 1px solid var(--line); }
+  .kv > :first-child { border-top: 0; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="side-top">
+      <a class="logo" href="#"><img src="icon.svg" alt="">DevKit</a>
+      <div class="find"><input id="find" type="search" placeholder="Find a tool" aria-label="Find a tool" autocomplete="off"><kbd>/</kbd></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Tools"></nav>
+    <div class="side-foot">
+      <div class="lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Everything runs in your browser. The page is locked so nothing you paste can be sent anywhere.</span></div>
+      <button class="theme" id="theme" type="button">Theme: auto</button>
+      <span>Built by <a href="https://akinola.tech" target="_blank" rel="noopener">Fawaz Akinola</a></span>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("devkit:" + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("devkit:" + k, JSON.stringify(v)); } catch {} },
+};
+
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1400);
+}
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = Object.assign(document.createElement("textarea"), { value: text });
+    document.body.append(ta); ta.select(); document.execCommand("copy"); ta.remove();
+  }
+  toast("Copied");
+}
+// Any element with data-copy="#selector" or data-copy-text copies on click.
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-copy], [data-copy-text]");
+  if (!b) return;
+  const text = b.dataset.copyText ?? ($(b.dataset.copy).value ?? $(b.dataset.copy).textContent);
+  if (text) copy(text);
+});
+const copyBtn = (text) => `<button class="copy" data-copy-text="${esc(text)}">Copy</button>`;
+const kvRows = (rows) => rows.map(([k, v]) => `<span class="k">${esc(k)}</span><span class="v">${v === "" ? "<span class=pill>empty</span>" : esc(v)}</span>${copyBtn(v)}`).join("");
+
+// UTF-8 safe base64 helpers.
+const b64encode = (str, urlSafe) => {
+  const bytes = new TextEncoder().encode(str);
+  let bin = ""; for (const b of bytes) bin += String.fromCharCode(b);
+  const out = btoa(bin);
+  return urlSafe ? out.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "") : out;
+};
+const b64decode = (str) => {
+  let s = str.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(s)) throw new Error("That isn't valid Base64: it has characters outside A–Z, a–z, 0–9, + / - _ =.");
+  s += "===".slice((s.length + 3) % 4);
+  const bin = atob(s);
+  return new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
+};
+
+const ago = (ms) => {
+  const s = Math.round((ms - Date.now()) / 1000), a = Math.abs(s);
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  for (const [unit, sec] of [["year", 31536000], ["month", 2592000], ["week", 604800], ["day", 86400], ["hour", 3600], ["minute", 60]])
+    if (a >= sec) return rtf.format(Math.round(s / sec), unit);
+  return rtf.format(s, "second");
+};
+const fmtDate = (d, tz) => d.toLocaleString("en-GB", { timeZone: tz, weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+
+// Finds where JSON.parse would fail, because newer browsers no longer say.
+function jsonErrorAt(src) {
+  let i = 0;
+  const ws = () => { while (/\s/.test(src[i] || "")) i++; };
+  const fail = () => { throw i; };
+  const lit = (w) => { if (src.startsWith(w, i)) i += w.length; else fail(); };
+  const str = () => {
+    i++;
+    while (i < src.length && src[i] !== '"') {
+      if (src[i] === "\\") { i++; if (src[i] === "u") { if (!/^[0-9a-fA-F]{4}$/.test(src.slice(i + 1, i + 5))) fail(); i += 4; } else if (!'"\\/bfnrt'.includes(src[i])) fail(); }
+      else if (src.charCodeAt(i) < 32) fail();
+      i++;
+    }
+    if (src[i] !== '"') fail(); i++;
+  };
+  const val = () => {
+    ws(); const c = src[i];
+    if (c === "{") { i++; ws(); if (src[i] === "}") { i++; return; } for (;;) { ws(); if (src[i] !== '"') fail(); str(); ws(); if (src[i] !== ":") fail(); i++; val(); ws(); if (src[i] === ",") { i++; continue; } if (src[i] === "}") { i++; return; } fail(); } }
+    if (c === "[") { i++; ws(); if (src[i] === "]") { i++; return; } for (;;) { val(); ws(); if (src[i] === ",") { i++; continue; } if (src[i] === "]") { i++; return; } fail(); } }
+    if (c === '"') return str();
+    if (c === "t") return lit("true"); if (c === "f") return lit("false"); if (c === "n") return lit("null");
+    const m = src.slice(i).match(/^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/);
+    if (!m) fail(); i += m[0].length;
+  };
+  try { val(); ws(); if (i < src.length) fail(); return -1; } catch (pos) { return typeof pos === "number" ? Math.min(pos, src.length) : -1; }
+}
+
+// Tools ------------------------------------------------------------------------
+const TOOLS = [
+  {
+    id: "json", tag: "{}", name: "JSON", desc: "Format, minify and validate JSON. Errors point to the exact line.",
+    html: () => `
+      <div class="row"><button class="btn primary" data-act="fmt">Format</button><button class="btn" data-act="min">Minify</button><button class="btn" data-act="sort">Sort keys</button>
+        <label>Indent <select class="btn" id="indent"><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="tab">Tab</option></select></label></div>
+      <div class="grid2">
+        <div class="box"><div class="box-head">Input<div class="acts"><button class="btn" data-act="sample">Sample</button><button class="btn" data-act="clear">Clear</button></div></div><textarea id="in" spellcheck="false" placeholder='Paste JSON here, e.g. {"name":"Ada"}'></textarea></div>
+        <div class="box"><div class="box-head">Output<div class="acts"><button class="btn" data-copy="#out">Copy</button></div></div><pre class="out" id="out"></pre></div>
+      </div>
+      <div class="status" id="status"></div>`,
+    init(el) {
+      const inp = $("#in", el), out = $("#out", el), st = $("#status", el);
+      inp.value = store.get("json", "");
+      const sortKeys = (v) => Array.isArray(v) ? v.map(sortKeys) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, sortKeys(v[k])])) : v;
+      const run = (mode = "fmt") => {
+        store.set("json", inp.value);
+        const src = inp.value;
+        if (!src.trim()) { out.textContent = ""; st.textContent = ""; return; }
+        try {
+          let v = JSON.parse(src);
+          if (mode === "sort") v = sortKeys(v);
+          const ind = $("#indent", el).value;
+          out.textContent = mode === "min" ? JSON.stringify(v) : JSON.stringify(v, null, ind === "tab" ? "\t" : +ind);
+          const size = new Blob([out.textContent]).size;
+          st.className = "status"; st.textContent = `Valid JSON · ${Array.isArray(v) ? `array of ${v.length}` : typeof v === "object" && v ? `object with ${Object.keys(v).length} keys` : typeof v} · ${size.toLocaleString()} bytes`;
+        } catch (e) {
+          out.textContent = "";
+          const pos = jsonErrorAt(src);
+          let msg = e.message.replace(/, .*is not valid JSON$/s, "").replace(/ in JSON at position \d+.*$/s, "");
+          if (pos >= 0) {
+            const before = src.slice(0, pos), line = before.split("\n").length, col = pos - before.lastIndexOf("\n");
+            msg = `Line ${line}, column ${col}: ${msg}\n${src.split("\n")[line - 1]}\n${" ".repeat(Math.max(0, col - 1))}^`;
+          }
+          st.className = "status err"; st.innerHTML = `<pre style="margin:0;font:13px var(--mono);white-space:pre-wrap">${esc(msg)}</pre>`;
+        }
+      };
+      let mode = "fmt";
+      inp.addEventListener("input", () => run(mode));
+      $("#indent", el).addEventListener("change", () => run(mode));
+      el.addEventListener("click", (e) => {
+        const a = e.target.closest("[data-act]")?.dataset.act;
+        if (!a) return;
+        if (a === "clear") { inp.value = ""; inp.focus(); }
+        else if (a === "sample") inp.value = '{"user":{"id":42,"name":"Ada Obi","roles":["admin","dev"],"active":true},"city":"Lagos","balance":125000.5}';
+        else mode = a;
+        $$("[data-act=fmt],[data-act=min],[data-act=sort]", el).forEach((b) => b.classList.toggle("primary", b.dataset.act === mode));
+        run(mode);
+      });
+      run();
+    },
+  },
+  {
+    id: "jwt", tag: "JWT", name: "JWT decoder", desc: "Read a token's header and claims, and see when it expires.",
+    html: () => `
+      <div class="box"><div class="box-head">Token<div class="acts"><button class="btn" data-act="sample">Sample</button></div></div><textarea class="small" id="in" spellcheck="false" placeholder="eyJhbGciOi..."></textarea></div>
+      <div class="status" id="status"></div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="box"><div class="box-head">Header<button class="btn" data-copy="#h">Copy</button></div><pre class="out small" id="h"></pre></div>
+        <div class="box"><div class="box-head">Payload<button class="btn" data-copy="#p">Copy</button></div><pre class="out small" id="p"></pre></div>
+      </div>
+      <div class="box" style="margin-top:16px" id="claims-box" hidden><div class="box-head">Times</div><div class="kv" id="claims"></div></div>
+      <p style="color:var(--muted);font-size:13px">The signature is not checked. Decoding shows what's inside a token, not whether it can be trusted.</p>`,
+    init(el) {
+      const inp = $("#in", el), st = $("#status", el);
+      const run = () => {
+        const t = inp.value.trim();
+        $("#h", el).textContent = ""; $("#p", el).textContent = ""; $("#claims-box", el).hidden = true;
+        if (!t) { st.textContent = ""; return; }
+        try {
+          const parts = t.replace(/^Bearer\s+/i, "").split(".");
+          if (parts.length < 2) throw new Error("A JWT has three parts separated by dots: header.payload.signature");
+          const h = JSON.parse(b64decode(parts[0])), p = JSON.parse(b64decode(parts[1]));
+          $("#h", el).textContent = JSON.stringify(h, null, 2);
+          $("#p", el).textContent = JSON.stringify(p, null, 2);
+          const times = ["iat", "nbf", "exp", "auth_time"].filter((k) => typeof p[k] === "number");
+          if (times.length) {
+            $("#claims-box", el).hidden = false;
+            const names = { iat: "Issued", nbf: "Not before", exp: "Expires", auth_time: "Signed in" };
+            $("#claims", el).innerHTML = kvRows(times.map((k) => [`${names[k]} (${k})`, `${new Date(p[k] * 1000).toISOString()} · ${ago(p[k] * 1000)}`]));
+          }
+          const now = Date.now() / 1000;
+          if (typeof p.exp === "number" && p.exp < now) { st.className = "status err"; st.textContent = `Expired ${ago(p.exp * 1000)}.`; }
+          else if (typeof p.nbf === "number" && p.nbf > now) { st.className = "status warn"; st.textContent = `Not valid yet. It starts ${ago(p.nbf * 1000)}.`; }
+          else { st.className = "status"; st.textContent = `Decoded · ${h.alg || "no alg"}${typeof p.exp === "number" ? ` · expires ${ago(p.exp * 1000)}` : " · no expiry"}`; }
+        } catch (e) { st.className = "status err"; st.textContent = e.message.startsWith("A JWT") ? e.message : "This doesn't decode as a JWT. Check you copied the whole token."; }
+      };
+      inp.addEventListener("input", run);
+      $("[data-act=sample]", el).addEventListener("click", () => {
+        const enc = (o) => b64encode(JSON.stringify(o), true), now = Math.floor(Date.now() / 1000);
+        inp.value = `${enc({ alg: "HS256", typ: "JWT" })}.${enc({ sub: "user_42", name: "Ada Obi", role: "admin", iat: now - 600, exp: now + 3000 })}.c2lnbmF0dXJl`;
+        run();
+      });
+    },
+  },
+  {
+    id: "base64", tag: "64", name: "Base64", desc: "Encode and decode text, including emoji and URL-safe Base64.",
+    html: () => `
+      <div class="row"><button class="btn primary" data-act="enc">Encode →</button><button class="btn" data-act="dec">← Decode</button><label><input type="checkbox" id="url"> URL-safe</label></div>
+      <div class="grid2">
+        <div class="box"><div class="box-head">Text<button class="btn" data-copy="#a">Copy</button></div><textarea id="a" spellcheck="false" placeholder="Plain text"></textarea></div>
+        <div class="box"><div class="box-head">Base64<button class="btn" data-copy="#b">Copy</button></div><textarea id="b" spellcheck="false" placeholder="Base64"></textarea></div>
+      </div><div class="status" id="status"></div>`,
+    init(el) {
+      const a = $("#a", el), b = $("#b", el), st = $("#status", el);
+      const enc = () => { st.textContent = ""; b.value = a.value ? b64encode(a.value, $("#url", el).checked) : ""; };
+      const dec = () => {
+        if (!b.value.trim()) { a.value = ""; st.textContent = ""; return; }
+        try { a.value = b64decode(b.value); st.textContent = ""; }
+        catch (e) { st.className = "status err"; st.textContent = e.message.startsWith("That") ? e.message : "This decodes to binary data, not readable text."; }
+      };
+      a.addEventListener("input", enc); b.addEventListener("input", dec); $("#url", el).addEventListener("change", enc);
+      $("[data-act=enc]", el).addEventListener("click", enc); $("[data-act=dec]", el).addEventListener("click", dec);
+    },
+  },
+  {
+    id: "url", tag: "%", name: "URL", desc: "Encode, decode and break a URL into its parts and query params.",
+    html: () => `
+      <div class="row"><button class="btn primary" data-act="enc">Encode</button><button class="btn" data-act="dec">Decode</button></div>
+      <div class="box"><div class="box-head">URL or text<button class="btn" data-copy="#in">Copy</button></div><textarea class="small" id="in" spellcheck="false" placeholder="https://example.com/search?q=jollof rice&city=Lagos"></textarea></div>
+      <div class="status" id="status"></div>
+      <div class="box" style="margin-top:16px" id="parts-box" hidden><div class="box-head">Parts</div><div class="kv" id="parts"></div></div>
+      <div class="box" style="margin-top:16px" id="q-box" hidden><div class="box-head">Query params</div><div class="kv" id="q"></div></div>`,
+    init(el) {
+      const inp = $("#in", el), st = $("#status", el);
+      const parse = () => {
+        $("#parts-box", el).hidden = $("#q-box", el).hidden = true;
+        let u; try { u = new URL(inp.value.trim()); } catch { return; }
+        $("#parts-box", el).hidden = false;
+        $("#parts", el).innerHTML = kvRows([["Protocol", u.protocol], ["Host", u.hostname], ["Port", u.port], ["Path", decodeURIComponent(u.pathname)], ["Query", u.search], ["Hash", u.hash]].filter(([, v]) => v));
+        const qs = [...u.searchParams];
+        if (qs.length) { $("#q-box", el).hidden = false; $("#q", el).innerHTML = kvRows(qs); }
+      };
+      inp.addEventListener("input", () => { st.textContent = ""; parse(); });
+      el.addEventListener("click", (e) => {
+        const a = e.target.closest("[data-act]")?.dataset.act;
+        if (!a) return;
+        try { inp.value = a === "enc" ? encodeURIComponent(inp.value) : decodeURIComponent(inp.value.replace(/\+/g, " ")); st.textContent = ""; }
+        catch { st.className = "status err"; st.textContent = "This has a broken % sequence, so it can't be decoded."; }
+        parse();
+      });
+    },
+  },
+  {
+    id: "time", tag: "ts", name: "Timestamp", desc: "Convert Unix timestamps and dates, with Lagos (WAT) and UTC.",
+    html: () => `
+      <div class="box"><div class="box-head">Now<span class="pill" id="live-ago">live</span></div><div class="kv" id="now"></div></div>
+      <div class="box" style="margin-top:16px"><div class="box-head">Convert</div>
+        <div style="padding:14px"><input class="input" id="in" placeholder="1730300000, 1730300000000 or 2026-10-30 14:00" autocomplete="off" spellcheck="false"></div>
+        <div class="kv" id="res"></div></div>
+      <div class="status" id="status"></div>`,
+    init(el) {
+      const tick = () => {
+        if (!el.isConnected) return clearInterval(timer);
+        const n = Date.now();
+        $("#now", el).innerHTML = kvRows([["Unix seconds", String(Math.floor(n / 1000))], ["Unix ms", String(n)], ["ISO 8601", new Date(n).toISOString()]]);
+      };
+      const timer = setInterval(tick, 1000); tick();
+      const inp = $("#in", el), st = $("#status", el);
+      const run = () => {
+        const v = inp.value.trim(); st.textContent = ""; $("#res", el).innerHTML = "";
+        if (!v) return;
+        let d, guess = "";
+        if (/^-?\d+(\.\d+)?$/.test(v)) {
+          const n = +v;
+          if (Math.abs(n) >= 1e14) { d = new Date(n / 1000); guess = "Read as microseconds"; }
+          else if (Math.abs(n) >= 1e11) { d = new Date(n); guess = "Read as milliseconds"; }
+          else { d = new Date(n * 1000); guess = "Read as seconds"; }
+        } else d = new Date(v);
+        if (isNaN(d)) { st.className = "status err"; st.textContent = "Couldn't read that as a date or timestamp."; return; }
+        $("#res", el).innerHTML = kvRows([
+          ["Lagos (WAT)", fmtDate(d, "Africa/Lagos")],
+          ["UTC", fmtDate(d, "UTC")],
+          ["Your time", fmtDate(d)],
+          ["ISO 8601", d.toISOString()],
+          ["Unix seconds", String(Math.floor(d.getTime() / 1000))],
+          ["Unix ms", String(d.getTime())],
+          ["Relative", ago(d.getTime())],
+        ]);
+        if (guess) { st.className = "status"; st.textContent = guess + "."; }
+      };
+      inp.addEventListener("input", run);
+    },
+  },
+  {
+    id: "uuid", tag: "ID", name: "UUID", desc: "Generate random v4 UUIDs, one or a few hundred at a time.",
+    html: () => `
+      <div class="row"><button class="btn primary" data-act="gen">Generate</button>
+        <label>How many <input class="input" id="n" type="number" min="1" max="500" value="5" style="width:80px;height:30px"></label>
+        <label><input type="checkbox" id="upper"> Uppercase</label><label><input type="checkbox" id="nohy"> No hyphens</label></div>
+      <div class="box"><div class="box-head">UUIDs<button class="btn" data-copy="#out">Copy all</button></div><ul class="list" id="list"></ul><pre id="out" hidden></pre></div>`,
+    init(el) {
+      const gen = () => {
+        const n = Math.min(500, Math.max(1, +$("#n", el).value || 1));
+        const ids = Array.from({ length: n }, () => {
+          let u = crypto.randomUUID();
+          if ($("#nohy", el).checked) u = u.replace(/-/g, "");
+          return $("#upper", el).checked ? u.toUpperCase() : u;
+        });
+        $("#out", el).textContent = ids.join("\n");
+        $("#list", el).innerHTML = ids.map((u) => `<li><span>${u}</span>${copyBtn(u)}</li>`).join("");
+      };
+      $("[data-act=gen]", el).addEventListener("click", gen);
+      $$("input", el).forEach((i) => i.addEventListener("change", gen));
+      gen();
+    },
+  },
+  {
+    id: "hash", tag: "#", name: "Hash", desc: "SHA-1, SHA-256, SHA-384 and SHA-512 of any text, as you type.",
+    html: () => `
+      <div class="box"><div class="box-head">Text</div><textarea class="small" id="in" spellcheck="false" placeholder="Type or paste text"></textarea></div>
+      <div class="box" style="margin-top:16px"><div class="box-head">Hashes (hex)</div><div class="kv" id="out"></div></div>`,
+    init(el) {
+      const inp = $("#in", el);
+      let seq = 0;
+      const run = async () => {
+        const my = ++seq, data = new TextEncoder().encode(inp.value);
+        const rows = [];
+        for (const alg of ["SHA-1", "SHA-256", "SHA-384", "SHA-512"]) {
+          const buf = await crypto.subtle.digest(alg, data);
+          rows.push([alg, [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("")]);
+        }
+        if (my === seq) $("#out", el).innerHTML = kvRows(rows);
+      };
+      inp.addEventListener("input", run); run();
+    },
+  },
+  {
+    id: "regex", tag: ".*", name: "Regex tester", desc: "Test a JavaScript regular expression with live highlighting.",
+    html: () => `
+      <div class="row" style="flex-wrap:nowrap"><input class="input" id="pat" placeholder="Pattern, e.g. \\b0[789][01]\\d{8}\\b" spellcheck="false" autocomplete="off"><input class="input" id="flags" value="g" style="width:80px" aria-label="Flags" spellcheck="false"></div>
+      <div class="status" id="status" style="margin:-4px 0 14px"></div>
+      <div class="grid2">
+        <div class="box"><div class="box-head">Test text</div><textarea id="txt" spellcheck="false">Call Ada on 08031234567 or Tunde on 09087654321.
+Office: 01-2345678</textarea></div>
+        <div class="box"><div class="box-head">Matches <span class="pill" id="count">0</span></div><pre class="out" id="hl"></pre></div>
+      </div>
+      <div class="box" style="margin-top:16px" id="groups-box" hidden><div class="box-head">Match details</div><ul class="list" id="groups"></ul></div>`,
+    init(el) {
+      const pat = $("#pat", el), flags = $("#flags", el), txt = $("#txt", el), st = $("#status", el);
+      pat.value = store.get("regex", "\\b0[789][01]\\d{8}\\b");
+      const run = () => {
+        store.set("regex", pat.value);
+        st.textContent = ""; $("#groups-box", el).hidden = true;
+        const text = txt.value;
+        if (!pat.value) { $("#hl", el).textContent = text; $("#count", el).textContent = "0"; return; }
+        let re;
+        try { re = new RegExp(pat.value, flags.value.includes("g") ? flags.value : flags.value + "g"); }
+        catch (e) { st.className = "status err"; st.textContent = e.message; $("#hl", el).textContent = text; return; }
+        const ms = [...text.matchAll(re)].filter((m, i) => i < 1000);
+        let html = "", last = 0;
+        for (const m of ms) { if (!m[0]) continue; html += esc(text.slice(last, m.index)) + `<mark>${esc(m[0])}</mark>`; last = m.index + m[0].length; }
+        $("#hl", el).innerHTML = html + esc(text.slice(last));
+        $("#count", el).textContent = ms.length;
+        $("#count", el).className = ms.length ? "pill ok" : "pill";
+        if (ms.length) {
+          $("#groups-box", el).hidden = false;
+          $("#groups", el).innerHTML = ms.slice(0, 50).map((m, i) => `<li><span>${i + 1}. ${esc(m[0]) || "<small>(empty)</small>"}${m.length > 1 ? ` <small>groups: ${m.slice(1).map((g) => g === undefined ? "–" : esc(g)).join(", ")}</small>` : ""}</span><small>index ${m.index}</small></li>`).join("");
+        }
+      };
+      [pat, flags, txt].forEach((i) => i.addEventListener("input", run)); run();
+    },
+  },
+  {
+    id: "cron", tag: "cron", name: "Cron explainer", desc: "Turn a cron expression into plain English and see the next runs.",
+    html: () => `
+      <input class="input" id="in" value="30 9 * * 1-5" spellcheck="false" autocomplete="off" style="font-size:20px;height:52px">
+      <div class="row" style="margin-top:10px" id="presets"></div>
+      <div class="status" id="status"></div>
+      <div class="box" style="margin-top:16px"><div class="box-head">Next 5 runs (your time)</div><ul class="list" id="next"></ul></div>
+      <p style="color:var(--muted);font-size:13px">Format: minute hour day-of-month month day-of-week. Supports *, lists (1,15), ranges (1-5), steps (*/10) and names (MON, JAN).</p>`,
+    init(el) {
+      const presets = [["Every 5 minutes", "*/5 * * * *"], ["Hourly", "0 * * * *"], ["Daily at midnight", "0 0 * * *"], ["Weekdays 9:30", "30 9 * * 1-5"], ["1st of month", "0 8 1 * *"], ["Sundays 6pm", "0 18 * * 0"]];
+      $("#presets", el).innerHTML = presets.map(([n, c]) => `<button class="btn" data-cron="${c}">${n}</button>`).join("");
+      const inp = $("#in", el), st = $("#status", el);
+      inp.value = store.get("cron", inp.value);
+      const MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], DOW = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+      const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const SPEC = [["minute", 0, 59], ["hour", 0, 23], ["day of month", 1, 31], ["month", 1, 12, MON], ["day of week", 0, 7, DOW]];
+      const MACROS = { "@yearly": "0 0 1 1 *", "@annually": "0 0 1 1 *", "@monthly": "0 0 1 * *", "@weekly": "0 0 * * 0", "@daily": "0 0 * * *", "@midnight": "0 0 * * *", "@hourly": "0 * * * *" };
+      function field(src, [name, lo, hi, names]) {
+        const set = new Set();
+        for (const part of src.toLowerCase().split(",")) {
+          const m = part.match(/^(\*|[a-z0-9]+(?:-[a-z0-9]+)?)(?:\/(\d+))?$/);
+          if (!m) throw new Error(`"${part}" isn't valid in the ${name} field.`);
+          const num = (s) => { const i = names ? names.indexOf(s) : -1; const n = i >= 0 ? i + (name === "month" ? 1 : 0) : /^\d+$/.test(s) ? +s : NaN; if (isNaN(n) || n < lo || n > hi) throw new Error(`${s} is out of range for ${name} (${lo}–${hi}).`); return n; };
+          let a = lo, b = hi;
+          if (m[1] !== "*") { const [x, y] = m[1].split("-"); a = num(x); b = y !== undefined ? num(y) : m[2] ? hi : a; }
+          if (a > b) throw new Error(`The range ${m[1]} in ${name} runs backwards.`);
+          const step = m[2] ? +m[2] : 1;
+          if (!step) throw new Error(`Step can't be 0 in ${name}.`);
+          for (let v = a; v <= b; v += step) set.add(name === "day of week" && v === 7 ? 0 : v);
+        }
+        return set;
+      }
+      const words = (src, i) => {
+        const [name] = SPEC[i];
+        const label = (v) => i === 3 ? MONTHS[v - 1] : i === 4 ? DAYS[v % 7] : String(v);
+        const lbl = (s) => /^\d+$/.test(s) ? label(+s) : i === 3 ? MONTHS[MON.indexOf(s.toLowerCase())] : i === 4 ? DAYS[DOW.indexOf(s.toLowerCase())] : s;
+        return src.split(",").map((p) => {
+          const [r, step] = p.split("/");
+          if (r === "*") return step ? `every ${step} ${name}s` : `every ${name}`;
+          const [a, b] = r.split("-");
+          const base = b ? `${lbl(a)} through ${lbl(b)}` : lbl(a);
+          return step ? `every ${step} ${name}s from ${base}` : base;
+        }).join(", ");
+      };
+      const pad = (n) => String(n).padStart(2, "0");
+      function describe(f) {
+        const [mi, h, dom, mon, dow] = f;
+        let s;
+        if (/^\d+$/.test(mi) && /^\d+$/.test(h)) s = `At ${pad(h)}:${pad(mi)}`;
+        else if (/^\d+$/.test(mi) && h === "*") s = mi === "0" ? "At the start of every hour" : `At ${mi} minutes past every hour`;
+        else if (/^\d+$/.test(mi)) s = `At minute ${mi} past hour ${words(h, 1)}`;
+        else if (mi === "*" && h === "*") s = "Every minute";
+        else { const w = words(mi, 0); s = (/^every/.test(w) ? w[0].toUpperCase() + w.slice(1) : `At minute ${w}`) + (h !== "*" ? `, during hour${/^\d+$/.test(h) ? "" : "s"} ${words(h, 1)}` : ""); }
+        if (dom !== "*" && dow !== "*") s += `, on day ${words(dom, 2)} of the month or on ${words(dow, 4)}`;
+        else if (dom !== "*") s += `, on day ${words(dom, 2)} of the month`;
+        else if (dow !== "*") s += `, on ${words(dow, 4)}`;
+        if (mon !== "*") s += `, in ${words(mon, 3)}`;
+        return s + ".";
+      }
+      function nextRuns(sets, raw, count) {
+        const [mi, h, dom, mon, dow] = sets, domStar = raw[2] === "*", dowStar = raw[4] === "*";
+        const dayOk = (d) => domStar && dowStar ? true : domStar ? dow.has(d.getDay()) : dowStar ? dom.has(d.getDate()) : dom.has(d.getDate()) || dow.has(d.getDay());
+        const d = new Date(); d.setSeconds(0, 0); d.setMinutes(d.getMinutes() + 1);
+        const out = [], limit = Date.now() + 5 * 366 * 864e5;
+        while (out.length < count && d.getTime() < limit) {
+          if (!mon.has(d.getMonth() + 1)) { d.setMonth(d.getMonth() + 1, 1); d.setHours(0, 0); continue; }
+          if (!dayOk(d)) { d.setDate(d.getDate() + 1); d.setHours(0, 0); continue; }
+          if (!h.has(d.getHours())) { d.setHours(d.getHours() + 1, 0); continue; }
+          if (!mi.has(d.getMinutes())) { d.setMinutes(d.getMinutes() + 1); continue; }
+          out.push(new Date(d)); d.setMinutes(d.getMinutes() + 1);
+        }
+        return out;
+      }
+      const run = () => {
+        store.set("cron", inp.value);
+        $("#next", el).innerHTML = "";
+        let src = inp.value.trim();
+        if (!src) { st.textContent = ""; return; }
+        src = MACROS[src.toLowerCase()] || src;
+        const raw = src.split(/\s+/);
+        try {
+          if (raw.length !== 5) throw new Error(`Cron needs 5 fields (minute hour day month weekday). This has ${raw.length}.`);
+          const sets = raw.map((r, i) => field(r, SPEC[i]));
+          st.className = "status"; st.textContent = describe(raw);
+          const runs = nextRuns(sets, raw, 5);
+          $("#next", el).innerHTML = runs.length ? runs.map((d) => `<li><span>${fmtDate(d)}</span><small>${ago(d.getTime())}</small></li>`).join("") : `<li><small>Never runs in the next 5 years (check the day and month).</small></li>`;
+        } catch (e) { st.className = "status err"; st.textContent = e.message; }
+      };
+      inp.addEventListener("input", run);
+      $("#presets", el).addEventListener("click", (e) => { const b = e.target.closest("[data-cron]"); if (b) { inp.value = b.dataset.cron; run(); } });
+      run();
+    },
+  },
+  {
+    id: "password", tag: "***", name: "Password", desc: "Strong random passwords from your device's secure generator.",
+    html: () => `
+      <div class="box"><div class="box-head">Password<div class="acts"><button class="btn" data-act="gen">New</button><button class="btn primary" data-copy="#pw">Copy</button></div></div>
+        <div class="big" id="pw"></div><div class="meter"><i id="meter"></i></div></div>
+      <div class="status" id="status"></div>
+      <div class="row" style="margin-top:16px"><label>Length <input type="range" id="len" min="8" max="64" value="20"> <b id="len-v" style="color:var(--text);font-family:var(--mono)">20</b></label></div>
+      <div class="row"><label><input type="checkbox" id="lower" checked> a–z</label><label><input type="checkbox" id="upper" checked> A–Z</label><label><input type="checkbox" id="digits" checked> 0–9</label><label><input type="checkbox" id="symbols" checked> !@#$</label><label><input type="checkbox" id="similar"> Skip look-alikes (l, 1, O, 0)</label></div>`,
+    init(el) {
+      const SETS = { lower: "abcdefghijklmnopqrstuvwxyz", upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", digits: "0123456789", symbols: "!@#$%^&*()-_=+[]{};:,.?/" };
+      const rand = (n) => { const max = Math.floor(2 ** 32 / n) * n, a = new Uint32Array(1); do crypto.getRandomValues(a); while (a[0] >= max); return a[0] % n; };
+      const gen = () => {
+        const len = +$("#len", el).value; $("#len-v", el).textContent = len;
+        let sets = Object.keys(SETS).filter((k) => $("#" + k, el).checked).map((k) => SETS[k]);
+        if ($("#similar", el).checked) sets = sets.map((s) => s.replace(/[lI1O0o]/g, ""));
+        if (!sets.length) { $("#status", el).className = "status err"; $("#status", el).textContent = "Pick at least one character type."; return; }
+        $("#status", el).textContent = "";
+        const all = sets.join("");
+        // One from each chosen set, the rest from all, then shuffle.
+        const chars = sets.map((s) => s[rand(s.length)]);
+        while (chars.length < len) chars.push(all[rand(all.length)]);
+        for (let i = chars.length - 1; i > 0; i--) { const j = rand(i + 1); [chars[i], chars[j]] = [chars[j], chars[i]]; }
+        $("#pw", el).textContent = chars.join("");
+        const bits = Math.round(len * Math.log2(all.length));
+        $("#meter", el).style.width = Math.min(100, bits / 1.28) + "%";
+        $("#meter", el).style.background = bits < 60 ? "var(--err)" : bits < 80 ? "var(--warn)" : "var(--accent)";
+        $("#status", el).className = "status" + (bits < 60 ? " warn" : "");
+        $("#status", el).textContent = `${bits} bits of entropy · ${bits < 60 ? "weak; make it longer" : bits < 80 ? "good" : "very strong"}`;
+      };
+      $("[data-act=gen]", el).addEventListener("click", gen);
+      $$("input", el).forEach((i) => i.addEventListener("input", gen));
+      gen();
+    },
+  },
+];
+const byId = Object.fromEntries(TOOLS.map((t) => [t.id, t]));
+
+// Router -----------------------------------------------------------------------
+function renderNav(filter = "") {
+  const q = filter.trim().toLowerCase();
+  const cur = location.hash.slice(1);
+  $("#nav").innerHTML = TOOLS.filter((t) => !q || (t.name + " " + t.desc + " " + t.id).toLowerCase().includes(q))
+    .map((t) => `<a href="#${t.id}"${t.id === cur ? ' aria-current="page"' : ""}><span>${t.tag}</span>${t.name}</a>`).join("") || `<span style="color:var(--muted);padding:8px 10px;font-size:14px">No tool matches</span>`;
+}
+function route() {
+  const t = byId[location.hash.slice(1)];
+  const main = $("#main");
+  if (!t) {
+    main.innerHTML = `<div class="hero"><h1>Developer tools that never leave your browser</h1><p>Format JSON, decode a JWT, read a timestamp or test a regex without pasting tokens and customer data into random websites. Works offline, too.</p></div>
+      <div class="home-grid">${TOOLS.map((x) => `<a href="#${x.id}"><b><span>${x.tag}</span>${x.name}</b><small>${x.desc}</small></a>`).join("")}</div>`;
+    document.title = "DevKit – Developer Tools";
+  } else {
+    main.innerHTML = `<div class="head"><h1>${t.name}</h1><p>${t.desc}</p></div><div id="tool">${t.html()}</div>`;
+    t.init($("#tool"));
+    document.title = `${t.name} – DevKit`;
+  }
+  renderNav($("#find").value);
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+$("#find").addEventListener("input", (e) => renderNav(e.target.value));
+$("#find").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { const first = $("#nav a"); if (first) { location.hash = first.getAttribute("href"); e.target.value = ""; e.target.blur(); } }
+  if (e.key === "Escape") { e.target.value = ""; renderNav(); e.target.blur(); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $("#find").focus(); }
+});
+
+// Theme: auto → light → dark
+const THEMES = ["auto", "light", "dark"];
+let theme = store.get("theme", "auto");
+const applyTheme = () => {
+  if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.dataset.theme = theme;
+  $("#theme").textContent = "Theme: " + theme;
+};
+$("#theme").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; store.set("theme", theme); applyTheme(); });
+applyTheme();
+route();
+
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
