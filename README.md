@@ -11,7 +11,9 @@ means nothing you paste can be sent anywhere. Works offline as a PWA.
 
 ## Layout
 
-- `public/`: the website (`index.html`, `app.js`, service worker, icons). Deploy this folder.
+- `public/index.html` + `landing.js`: the landing page at `/`.
+- `public/app/index.html` + `public/app.js`: the tools at `/app/` (old `/#tool` links redirect there).
+- `public/`: also the service worker and icons. Deploy this folder.
 - `extension/`: Chrome extension manifest and background script.
 - `scripts/build-extension.sh`: builds `dist/extension/` and `dist/devkit-extension.zip` from both.
 

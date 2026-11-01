@@ -3,162 +3,410 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'none'; base-uri 'none'">
-<title>DevKit – Developer Tools</title>
-<meta name="description" content="23 developer tools: array methods, font sizes, font picker, JSON, JWT, diff, JSON to TypeScript, CSV, cURL to fetch, webhook signatures, regex, cron, colors and more. Runs entirely in your browser; nothing you paste leaves the page.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'none'; base-uri 'none'">
+<title>DevKit – Developer tools that don't leak your data</title>
+<meta name="description" content="23 free developer tools that run entirely in your browser: JSON, JWT decoder, cURL to fetch, webhook signature checker, regex, cron, font sizes and more. No sign-up, works offline, nothing you paste leaves the page.">
+<meta property="og:title" content="DevKit – Developer tools that don't leak your data">
+<meta property="og:description" content="23 free tools for JSON, JWTs, cURL, webhooks, regex and more. Everything runs in your browser.">
+<meta property="og:type" content="website">
 <meta name="theme-color" content="#0d1117">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script src="/landing.js"></script>
 <style>
 :root {
-  --bg: #0d1117; --panel: #151b23; --panel-2: #1c2430; --line: #29313d; --text: #e6edf3; --muted: #8b96a5;
-  --accent: #4ade80; --accent-ink: #052e16; --accent-soft: rgba(74,222,128,.12); --err: #f87171; --err-soft: rgba(248,113,113,.12);
-  --warn: #fbbf24; --mark: rgba(250,204,21,.35);
+  --bg: #0b0f14; --bg-2: #0f141b; --panel: #141a22; --panel-2: #1a2230; --line: #252e3b; --text: #e8edf3; --muted: #8e99a8; --dim: #5d6876;
+  --accent: #4ade80; --accent-ink: #052e16; --accent-soft: rgba(74,222,128,.12); --blue: #7cc4ff; --amber: #fbbf24; --red: #f87171; --violet: #c4a7ff;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   color-scheme: dark;
 }
-:root[data-theme="light"] {
-  --bg: #f7f8fa; --panel: #ffffff; --panel-2: #f0f2f5; --line: #dde1e7; --text: #16191d; --muted: #5e6875;
-  --accent: #15803d; --accent-ink: #ffffff; --accent-soft: rgba(21,128,61,.1); --err: #c42b2b; --err-soft: rgba(196,43,43,.08);
-  --warn: #a16207; --mark: rgba(250,204,21,.45); color-scheme: light;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #f7f8fa; --panel: #ffffff; --panel-2: #f0f2f5; --line: #dde1e7; --text: #16191d; --muted: #5e6875;
-    --accent: #15803d; --accent-ink: #ffffff; --accent-soft: rgba(21,128,61,.1); --err: #c42b2b; --err-soft: rgba(196,43,43,.08);
-    --warn: #a16207; --mark: rgba(250,204,21,.45); color-scheme: light;
-  }
-}
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
-body { background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-button, input, textarea, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
-a { color: var(--accent); }
-.app { display: grid; grid-template-columns: 248px 1fr; min-height: 100%; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+code, kbd, pre { font-family: var(--mono); }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+.wrap > * { min-width: 0; }
 
-/* Sidebar */
-.side { border-right: 1px solid var(--line); padding: 18px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
-.logo { display: flex; align-items: center; gap: 10px; font-weight: 750; font-size: 18px; padding: 0 6px; text-decoration: none; color: var(--text); }
+/* Nav */
+.nav { position: sticky; top: 0; z-index: 10; background: rgba(11,15,20,.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid transparent; transition: border-color .2s; }
+.nav.scrolled { border-bottom-color: var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 750; font-size: 18px; text-decoration: none; letter-spacing: -.01em; }
 .logo img { width: 28px; height: 28px; }
-.find { position: relative; }
-.find input { width: 100%; height: 36px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); padding: 0 34px 0 11px; outline: none; }
-.find input:focus { border-color: var(--accent); }
-.find kbd { position: absolute; right: 8px; top: 8px; }
-kbd { font: 11px var(--mono); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; color: var(--muted); background: var(--panel-2); }
-.nav { display: grid; gap: 2px; }
-.nav a { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 9px; color: var(--text); text-decoration: none; font-size: 14.5px; }
-.nav a:hover { background: var(--panel-2); }
-.nav a[aria-current] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.nav a span { width: 26px; height: 22px; border-radius: 6px; background: var(--panel-2); display: grid; place-items: center; font: 600 10.5px var(--mono); color: var(--muted); flex: none; }
-.nav a[aria-current] span { background: var(--accent); color: var(--accent-ink); }
-.side-foot { margin-top: auto; font-size: 12.5px; color: var(--muted); padding: 0 6px; display: grid; gap: 10px; }
-.lock { display: flex; gap: 8px; align-items: flex-start; }
-.lock svg { flex: none; margin-top: 2px; color: var(--accent); }
-.theme { justify-self: start; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 4px 10px; font-size: 12.5px; }
-
-/* Main */
-main { padding: 28px 32px 60px; max-width: 1100px; width: 100%; min-width: 0; }
-.head h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
-.head p { margin: 4px 0 20px; color: var(--muted); }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; min-width: 0; display: flex; flex-direction: column; }
-.box-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); font-weight: 600; min-height: 44px; flex-wrap: wrap; }
-.box-head .acts { display: flex; gap: 6px; flex-wrap: wrap; }
-textarea, .out { width: 100%; min-height: 320px; flex: 1; border: 0; background: transparent; padding: 12px 14px; font: 13.5px/1.55 var(--mono); outline: none; resize: vertical; white-space: pre-wrap; word-break: break-all; margin: 0; tab-size: 2; }
-.out { overflow: auto; }
-.out.small, textarea.small { min-height: 120px; }
-.btn { height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); font-size: 13px; font-weight: 600; white-space: nowrap; }
-.btn:hover { border-color: var(--muted); }
+.links { display: flex; gap: 22px; font-size: 14.5px; color: var(--muted); }
+.links a { text-decoration: none; }
+.links a:hover { color: var(--text); }
+.nav .cta { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px; border-radius: 10px; font-weight: 650; font-size: 15px; text-decoration: none; border: 1px solid var(--line); background: var(--panel); white-space: nowrap; transition: transform .15s, border-color .15s, background .15s; }
+.btn:hover { border-color: var(--dim); transform: translateY(-1px); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-.input { height: 40px; width: 100%; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); padding: 0 12px; font: 14px var(--mono); outline: none; }
-.input:focus, textarea:focus { border-color: var(--accent); }
-.box textarea:focus { box-shadow: inset 0 0 0 1px var(--accent); border-radius: 0 0 12px 12px; }
-.status { margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-size: 14px; background: var(--accent-soft); color: var(--accent); }
-.status.err { background: var(--err-soft); color: var(--err); }
-.status.warn { background: rgba(251,191,36,.12); color: var(--warn); }
-.status:empty { display: none; }
-.kv { display: grid; grid-template-columns: max-content 1fr auto; gap: 0; font-size: 14px; }
-.kv > * { padding: 9px 14px; border-top: 1px solid var(--line); min-width: 0; }
-.kv > :nth-child(-n+3) { border-top: 0; }
-.kv .k { color: var(--muted); font-weight: 600; font-size: 13px; }
-.kv .v { font-family: var(--mono); word-break: break-all; }
-.copy { border: 0; background: none; color: var(--muted); padding: 2px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; }
-.copy:hover { color: var(--accent); background: var(--accent-soft); }
-.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-.row label { font-size: 13.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
-.stack { display: grid; gap: 16px; }
-mark { background: var(--mark); color: inherit; border-radius: 3px; }
-.big { font: 600 22px/1.4 var(--mono); word-break: break-all; padding: 16px; }
-.pill { font: 600 12px var(--mono); padding: 2px 8px; border-radius: 99px; background: var(--panel-2); color: var(--muted); }
-.pill.ok { background: var(--accent-soft); color: var(--accent); }
-.pill.bad { background: var(--err-soft); color: var(--err); }
-.list { margin: 0; padding: 4px 0; list-style: none; font: 14px var(--mono); }
-.list li { padding: 7px 14px; display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); }
-.list li:first-child { border-top: 0; }
-.list li small { color: var(--muted); font-family: inherit; }
-.meter { height: 6px; border-radius: 9px; background: var(--panel-2); overflow: hidden; margin: 0 16px 14px; }
-.meter i { display: block; height: 100%; background: var(--accent); }
-input[type=range] { accent-color: var(--accent); width: 200px; }
-input[type=checkbox] { accent-color: var(--accent); }
-.home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.home-grid a { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; text-decoration: none; color: var(--text); display: grid; gap: 6px; }
-.home-grid a:hover { border-color: var(--accent); }
-.home-grid b { display: flex; gap: 10px; align-items: center; }
-.home-grid b span { font: 600 10.5px var(--mono); background: var(--panel-2); color: var(--muted); border-radius: 6px; padding: 3px 6px; }
-.home-grid small { color: var(--muted); font-size: 13.5px; }
-.hero { margin-bottom: 24px; }
-.hero h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -.02em; }
-.hero p { color: var(--muted); margin: 0; max-width: 620px; }
-.out.diff { white-space: normal; padding: 8px 0; }
-.out.diff span { display: block; white-space: pre-wrap; padding: 0 14px; min-height: 1.55em; }
-.d-add { background: var(--accent-soft); color: var(--accent); }
-.d-del { background: var(--err-soft); color: var(--err); }
-.kv.pre .v { white-space: pre-wrap; }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 10px); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; opacity: 0; transition: .18s; pointer-events: none; }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.btn.primary:hover { background: #6ee79a; }
+.btn.small { height: 36px; padding: 0 14px; font-size: 14px; }
+.btn svg { flex: none; }
 
-@media (max-width: 820px) {
-  .app { grid-template-columns: 1fr; }
-  .side { position: sticky; top: 0; z-index: 4; height: auto; background: var(--bg); border-right: 0; border-bottom: 1px solid var(--line); padding: 12px 16px 10px; gap: 10px; }
-  .side-top { display: flex; gap: 12px; align-items: center; }
-  .side-top .find { flex: 1; }
-  .find kbd, .side-foot { display: none; }
-  .nav { display: flex; overflow-x: auto; scrollbar-width: none; gap: 6px; }
-  .nav::-webkit-scrollbar { display: none; }
-  .nav a { flex: none; border: 1px solid var(--line); padding: 5px 10px; font-size: 13.5px; }
-  .nav a span { display: none; }
-  main { padding: 20px 16px 48px; }
-  .grid2 { grid-template-columns: 1fr; }
-  textarea, .out { min-height: 200px; }
-  .kv { grid-template-columns: 1fr auto; }
-  .kv .k { grid-column: 1 / 3; padding-bottom: 0; }
-  .kv > :nth-child(3n+2), .kv > :nth-child(3n) { border-top: 0; }
-  .kv > :nth-child(3n+1) { border-top: 1px solid var(--line); }
-  .kv > :first-child { border-top: 0; }
+/* Hero */
+.hero { position: relative; padding: 72px 0 40px; overflow: hidden; }
+.hero::before { content: ""; position: absolute; inset: -200px 0 auto; height: 700px; background: radial-gradient(600px 300px at 70% 30%, rgba(74,222,128,.10), transparent 70%), radial-gradient(500px 260px at 15% 10%, rgba(124,196,255,.08), transparent 70%); pointer-events: none; }
+.hero .wrap { position: relative; display: grid; grid-template-columns: 1.02fr 1fr; gap: 48px; align-items: center; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border: 1px solid rgba(74,222,128,.25); padding: 5px 12px; border-radius: 99px; }
+.eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(74,222,128,.18); }
+h1 { font-size: clamp(36px, 5.2vw, 60px); line-height: 1.05; letter-spacing: -.035em; margin: 18px 0 18px; font-weight: 800; }
+h1 em { font-style: normal; color: var(--accent); }
+.sub { font-size: 18.5px; color: var(--muted); margin: 0 0 28px; max-width: 540px; }
+.sub b { color: var(--text); font-weight: 600; }
+.hero .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.ticks { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 24px; font-size: 14px; color: var(--muted); }
+.ticks span { display: inline-flex; align-items: center; gap: 6px; }
+.ticks svg { color: var(--accent); }
+
+/* Demo window */
+.demo { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.02) inset; overflow: hidden; min-width: 0; }
+.demo-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--bg-2); }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 11px; height: 11px; border-radius: 50%; background: #2b3441; }
+.demo-tabs { display: flex; gap: 4px; margin-left: 10px; overflow-x: auto; scrollbar-width: none; }
+.demo-tabs::-webkit-scrollbar { display: none; }
+.demo-tabs button { border: 0; background: none; color: var(--muted); font: 600 12.5px var(--mono); padding: 5px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.demo-tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.demo-body { padding: 16px; display: grid; gap: 12px; min-height: 380px; }
+.pane { background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.pane-head { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.pane pre { margin: 0; padding: 12px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-all; min-height: 52px; }
+.pane pre .c { display: inline-block; width: 7px; height: 15px; background: var(--accent); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.out { opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; }
+.out.show { opacity: 1; transform: none; }
+.k { color: var(--blue); } .s { color: var(--accent); } .n { color: var(--amber); } .m { color: var(--dim); } .r { color: var(--red); } .v { color: var(--violet); }
+.status { font-size: 13px; padding: 9px 12px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.status.err { background: rgba(248,113,113,.12); color: var(--red); }
+
+/* Sections */
+section { padding: 88px 0; }
+.kicker { font: 700 12.5px var(--mono); color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+h2 { font-size: clamp(28px, 3.6vw, 42px); line-height: 1.12; letter-spacing: -.025em; margin: 10px 0 14px; font-weight: 780; }
+.lede { color: var(--muted); font-size: 17.5px; max-width: 640px; margin: 0; }
+.center { text-align: center; }
+.center .lede { margin: 0 auto; }
+
+.strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg-2); padding: 22px 0; }
+.strip .wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stat b { display: block; font-size: 26px; letter-spacing: -.02em; }
+.stat span { color: var(--muted); font-size: 14px; }
+
+/* Problem / privacy */
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.risks { display: grid; gap: 12px; margin-top: 26px; }
+.risk { display: grid; grid-template-columns: 36px 1fr; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.risk i { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; background: rgba(248,113,113,.1); color: var(--red); font-style: normal; font-weight: 800; }
+.risk b { display: block; }
+.risk span { color: var(--muted); font-size: 14.5px; }
+.lock { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: grid; gap: 16px; }
+.lock pre { margin: 0; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.lock pre mark { background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 1px 3px; }
+.net { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font: 12.5px var(--mono); }
+.net div { display: grid; grid-template-columns: 1fr 70px 70px; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--muted); }
+.net div:first-child { border-top: 0; background: var(--bg-2); color: var(--dim); font-weight: 700; }
+.net .empty { display: block; text-align: center; color: var(--accent); padding: 18px; }
+
+/* Tools grid */
+.cats { display: grid; gap: 34px; margin-top: 44px; }
+.cat h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); font-weight: 650; display: flex; align-items: center; gap: 10px; }
+.cat h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.tool { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); text-decoration: none; transition: border-color .15s, transform .15s, background .15s; }
+.tool:hover { border-color: rgba(74,222,128,.5); transform: translateY(-2px); background: var(--panel-2); }
+.tool .tag { width: 44px; height: 44px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); display: grid; place-items: center; font: 700 12px var(--mono); color: var(--accent); }
+.tool b { display: block; font-size: 15px; }
+.tool span { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+.tool .new { display: inline-block; margin-left: 6px; font: 700 10px var(--mono); color: var(--amber); vertical-align: 2px; }
+
+/* Lagos features */
+.feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 44px; }
+.feat { border: 1px solid var(--line); border-radius: 16px; background: var(--panel); overflow: hidden; display: flex; flex-direction: column; }
+.feat .shot { background: var(--bg-2); border-bottom: 1px solid var(--line); padding: 16px; font: 12.5px/1.6 var(--mono); min-height: 168px; white-space: pre-wrap; word-break: break-all; }
+.feat .txt { padding: 18px; }
+.feat h3 { margin: 0 0 6px; font-size: 17px; }
+.feat p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+/* Extension */
+.ext { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.page-mock { position: relative; background: #f6f7f9; color: #1d232b; border-radius: 14px; padding: 22px 22px 120px; border: 1px solid var(--line); font-size: 14.5px; min-height: 300px; }
+.page-mock .bar { height: 10px; border-radius: 6px; background: #e3e6ea; margin-bottom: 10px; }
+.page-mock .sel { background: #b4d5fe; font: 12.5px var(--mono); padding: 2px 3px; border-radius: 2px; word-break: break-all; }
+.menu { position: absolute; left: 34%; top: 108px; width: 250px; background: #fff; color: #1d232b; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.28); padding: 6px; font-size: 13.5px; border: 1px solid #e3e6ea; }
+.menu div { padding: 6px 10px; border-radius: 6px; display: flex; justify-content: space-between; }
+.menu .hot { background: #e8f0fe; font-weight: 600; }
+.menu .submenu { display: block; position: absolute; left: 92%; top: 66px; width: 200px; background: #fff; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.28); padding: 6px; border: 1px solid #e3e6ea; }
+.menu hr { border: 0; border-top: 1px solid #eceef1; margin: 4px 0; }
+.list { list-style: none; padding: 0; margin: 22px 0 26px; display: grid; gap: 10px; }
+.list li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; color: var(--muted); }
+.list li b { color: var(--text); font-weight: 600; }
+.list svg { color: var(--accent); margin-top: 4px; }
+
+/* Small features */
+.mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 40px; }
+.mini div { border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: var(--panel); }
+.mini b { display: block; margin: 10px 0 4px; }
+.mini span { color: var(--muted); font-size: 14px; }
+.mini kbd { font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 8px; background: var(--panel-2); color: var(--text); }
+.mini .ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+
+/* FAQ */
+.faq { max-width: 780px; margin: 40px auto 0; display: grid; gap: 10px; }
+.faq details { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 0 18px; }
+.faq summary { cursor: pointer; list-style: none; padding: 16px 0; font-weight: 650; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--muted); font-size: 20px; line-height: 1; transition: transform .2s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq p { margin: 0 0 16px; color: var(--muted); }
+.faq code { background: var(--panel-2); padding: 1px 6px; border-radius: 5px; font-size: 13.5px; color: var(--text); }
+
+/* Final CTA */
+.final { text-align: center; padding: 96px 0; position: relative; overflow: hidden; }
+.final::before { content: ""; position: absolute; inset: 0; background: radial-gradient(520px 240px at 50% 60%, rgba(74,222,128,.12), transparent 70%); pointer-events: none; }
+.final .wrap { position: relative; }
+.final .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
+footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+footer a { text-decoration: none; }
+footer a:hover { color: var(--text); }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } .pane pre .c { animation: none; } }
+
+@media (max-width: 960px) {
+  .hero .wrap, .split, .ext { grid-template-columns: 1fr; }
+  .feats { grid-template-columns: 1fr; }
+  .mini { grid-template-columns: 1fr 1fr; }
+  .links { display: none; }
+}
+@media (max-width: 600px) {
+  .wrap { padding: 0 16px; }
+  .hero { padding-top: 44px; }
+  section { padding: 64px 0; }
+  .strip .wrap { grid-template-columns: 1fr 1fr; }
+  .mini { grid-template-columns: 1fr; }
+  .nav .cta .btn:not(.primary) { display: none; }
+  .demo-body { min-height: 420px; }
+  .menu { left: 8%; width: 210px; }
+  .menu .submenu { left: 30%; top: 150px; width: 180px; }
+  .page-mock { padding-bottom: 240px; }
+  .net div { grid-template-columns: 1fr 52px 52px; }
 }
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="side">
-    <div class="side-top">
-      <a class="logo" href="#"><img src="icon.svg" alt="">DevKit</a>
-      <div class="find"><input id="find" type="search" placeholder="Find a tool" aria-label="Find a tool" autocomplete="off"><kbd>/</kbd></div>
-    </div>
-    <nav class="nav" id="nav" aria-label="Tools"></nav>
-    <div class="side-foot">
-      <div class="lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Everything runs in your browser. The page is locked so nothing you paste can be sent anywhere.</span></div>
-      <button class="theme" id="theme" type="button">Theme: auto</button>
-      <span>Built by <a href="https://akinola.tech" target="_blank" rel="noopener">Fawaz Akinola</a></span>
-    </div>
-  </aside>
-  <main id="main"></main>
-</div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js"></script>
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="logo" href="/"><img src="/icon.svg" alt="">DevKit</a>
+    <nav class="links" aria-label="Sections">
+      <a href="#tools">Tools</a><a href="#privacy">Privacy</a><a href="#extension">Extension</a><a href="#faq">FAQ</a>
+    </nav>
+    <div class="cta">
+      <a class="btn small" href="https://github.com/Phawaaaz/devkit" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+      <a class="btn small primary" href="/app/">Open DevKit</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow"><i></i>23 tools · free · open source</span>
+      <h1>Developer tools that <em>don't leak</em> your data.</h1>
+      <p class="sub">Format JSON, decode JWTs, turn cURL into fetch, check Paystack webhook signatures and more. <b>Everything runs in your browser</b>, and the page is locked so nothing you paste can be sent anywhere.</p>
+      <div class="actions">
+        <a class="btn primary" href="/app/">Open DevKit <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn" href="#tools">See all 23 tools</a>
+      </div>
+      <div class="ticks">
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>No sign-up</span>
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>No tracking</span>
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>Works offline</span>
+        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>Chrome extension</span>
+      </div>
+    </div>
+
+    <div class="demo" aria-label="DevKit demo">
+      <div class="demo-bar"><div class="dots"><i></i><i></i><i></i></div><div class="demo-tabs" id="demo-tabs" role="tablist"></div></div>
+      <div class="demo-body">
+        <div class="pane"><div class="pane-head"><span id="d-in-label">Input</span><span>paste</span></div><pre id="d-in"></pre></div>
+        <div class="status out" id="d-status"></div>
+        <div class="pane out" id="d-out-pane"><div class="pane-head"><span id="d-out-label">Output</span><span>copy</span></div><pre id="d-out"></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="strip">
+  <div class="wrap">
+    <div class="stat"><b>23</b><span>tools in one place</span></div>
+    <div class="stat"><b>0</b><span>network requests with your data</span></div>
+    <div class="stat"><b>0 kB</b><span>of trackers and ads</span></div>
+    <div class="stat"><b>Offline</b><span>installs as an app</span></div>
+  </div>
+</div>
+
+<section id="privacy">
+  <div class="wrap split">
+    <div class="reveal">
+      <div class="kicker">The problem</div>
+      <h2>You paste production secrets into random websites.</h2>
+      <p class="lede">Every developer does it: a JWT to see why login fails, a webhook body to check a signature, a customer's JSON to find the broken comma. Most online formatters are free because of what you paste into them.</p>
+      <div class="risks">
+        <div class="risk"><i>!</i><div><b>Tokens carry real data</b><span>A JWT holds user IDs, emails and roles. Paste it into the wrong site and it's in someone else's logs.</span></div></div>
+        <div class="risk"><i>!</i><div><b>Secret keys are worth stealing</b><span>A Paystack or Stripe secret key pasted into an HMAC site lets that site move money as you.</span></div></div>
+        <div class="risk"><i>!</i><div><b>"Client-side" is just a claim</b><span>Plenty of sites say "we don't store anything" and still send your input to analytics.</span></div></div>
+      </div>
+    </div>
+    <div class="lock reveal">
+      <div class="kicker">How DevKit is different</div>
+      <p style="margin:0;color:var(--muted)">DevKit ships with a strict Content-Security-Policy. The browser itself refuses any connection to another server, so even a bug or a bad dependency couldn't send your data out.</p>
+<pre><span class="m">&lt;meta http-equiv="Content-Security-Policy"</span>
+  content="default-src 'self';
+           script-src 'self';
+           <mark>connect-src 'self';</mark>
+           form-action 'none'"&gt;</pre>
+      <div>
+        <p style="margin:0 0 10px;font-weight:650">Check it yourself: DevTools → Network, then paste anything.</p>
+        <div class="net"><div><span>Name</span><span>Status</span><span>Size</span></div><span class="empty">No requests. Your data stayed on your machine.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="center reveal">
+      <div class="kicker">The kit</div>
+      <h2>23 tools you reach for every day</h2>
+      <p class="lede">Each one opens instantly, remembers your last input on your own device, and has a sample to try.</p>
+    </div>
+    <div class="cats" id="cats"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="center reveal">
+      <div class="kicker">Made in Lagos</div>
+      <h2>Built for how we actually ship</h2>
+      <p class="lede">The details other tool sites miss when your users, banks and payment providers are African.</p>
+    </div>
+    <div class="feats">
+      <div class="feat reveal">
+<div class="shot"><span class="m">// Paystack signs with SHA-512</span>
+<span class="k">Algorithm</span>  SHA-512
+<span class="k">Payload</span>    {"event":"charge.success",…}
+<span class="k">Header</span>     x-paystack-signature: 3f9a…
+
+<span class="s">✓ Match. This payload was signed
+  with this secret.</span></div>
+        <div class="txt"><h3>Webhook signature checker</h3><p>Debug "invalid signature" errors from Paystack, Flutterwave, Stripe or GitHub without pasting your secret key into a stranger's site.</p></div>
+      </div>
+      <div class="feat reveal">
+<div class="shot">[
+  {
+    <span class="k">"name"</span>: <span class="s">"Chioma Okafor"</span>,
+    <span class="k">"phone"</span>: <span class="s">"+2348031234567"</span>,
+    <span class="k">"city"</span>: <span class="s">"Lekki"</span>, <span class="k">"state"</span>: <span class="s">"Lagos"</span>,
+    <span class="k">"bank"</span>: <span class="s">"Moniepoint"</span>,
+    <span class="k">"balance"</span>: <span class="n">400991.85</span>
+  }, <span class="m">…</span></div>
+        <div class="txt"><h3>Nigerian test data</h3><p>Realistic names, +234 numbers on real network prefixes, cities, states and banks, as JSON, CSV or SQL inserts for your seed scripts.</p></div>
+      </div>
+      <div class="feat reveal">
+<div class="shot"><span class="k">Input</span>        1730300000
+
+<span class="k">Lagos (WAT)</span>  Wed 30 Oct 2024, 15:53:20
+<span class="k">UTC</span>          Wed 30 Oct 2024, 14:53:20
+<span class="k">Relative</span>     2 years ago
+<span class="m">Read as seconds.</span></div>
+        <div class="txt"><h3>Lagos time first</h3><p>Timestamps show West Africa Time next to UTC, so you stop doing "+1 hour" in your head while reading server logs.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="extension" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap ext">
+    <div class="reveal">
+      <div class="kicker">Chrome extension</div>
+      <h2>Select. Right-click. Done.</h2>
+      <p class="lede">See a token in a log, a timestamp in an error or a cURL command in some docs? Select it, choose <b style="color:var(--text)">Open in DevKit</b>, and the right tool opens with your text already in it.</p>
+      <ul class="list">
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg><span><b>Picks the tool for you:</b> spots JWTs, JSON, timestamps, URLs, colours, Base64 and cURL.</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg><span><b>One permission:</b> the right-click menu. It can't read your pages.</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg><span><b>Fully offline:</b> all 23 tools are inside the extension. <kbd style="font-size:12px;border:1px solid var(--line);border-radius:5px;padding:1px 6px">Alt+Shift+D</kbd> opens it.</span></li>
+      </ul>
+      <div class="actions" style="display:flex;gap:12px;flex-wrap:wrap">
+        <a class="btn primary" href="https://github.com/Phawaaaz/devkit#chrome-extension" target="_blank" rel="noopener">Install from GitHub</a>
+        <span class="btn" style="cursor:default;color:var(--muted)">Chrome Web Store: coming soon</span>
+      </div>
+    </div>
+    <div class="page-mock reveal" aria-hidden="true">
+      <div class="bar" style="width:40%"></div><div class="bar" style="width:85%"></div><div class="bar" style="width:70%"></div>
+      <p style="margin:14px 0 0">Authorization: Bearer <span class="sel">eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyXzQyIn0.c2ln</span></p>
+      <div class="menu">
+        <div>Copy <span style="color:#8a929c">⌘C</span></div><div>Search Google for "eyJhbG…"</div><hr>
+        <div class="hot">Open in DevKit <span>›</span></div><div>Inspect</div>
+        <div class="submenu"><div class="hot">Pick the tool for me</div><div>Format JSON</div><div>Decode JWT</div><div>Convert timestamp</div><div>cURL to fetch</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="center reveal">
+      <div class="kicker">Small things, done right</div>
+      <h2>Fast enough to keep open all day</h2>
+    </div>
+    <div class="mini">
+      <div class="reveal"><span class="ic"><kbd>/</kbd></span><b>Keyboard first</b><span>Press <kbd>/</kbd> to find any tool and <kbd>Enter</kbd> to open it.</span></div>
+      <div class="reveal"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span><b>Install as an app</b><span>Add it to your dock or home screen. It opens in its own window and works offline.</span></div>
+      <div class="reveal"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span><b>Light and dark</b><span>Follows your system, or pick one. Readable at 2 a.m. during an outage.</span></div>
+      <div class="reveal"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg></span><b>No dependencies</b><span>Plain HTML and JavaScript, no frameworks and no build step. Loads in a blink.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" style="padding-top:20px">
+  <div class="wrap">
+    <div class="center reveal"><div class="kicker">FAQ</div><h2>Questions</h2></div>
+    <div class="faq">
+      <details><summary>Is it really private?</summary><p>Yes. Every tool runs as JavaScript in your browser tab. The page's Content-Security-Policy (<code>connect-src 'self'</code>) tells the browser to block requests to any other server, so even if we wanted to send your data somewhere, the browser wouldn't let us. The code is open on GitHub if you'd like to read it.</p></details>
+      <details><summary>How can I check that nothing is sent?</summary><p>Open DevTools (<code>F12</code> or <code>⌥⌘I</code>), go to the Network tab, then use any tool. You'll see no requests carrying your input. You can even turn off Wi-Fi: once DevKit has loaded, it keeps working.</p></details>
+      <details><summary>Is it free?</summary><p>Yes, all 23 tools, with no account and no limits. There are no ads and no trackers.</p></details>
+      <details><summary>Does it remember what I paste?</summary><p>Some tools keep your last input in your browser's local storage so it's there next time. It never leaves your device, and clearing your site data removes it.</p></details>
+      <details><summary>Why is "Show real previews" in the Font picker allowed to load fonts?</summary><p>That one button downloads font files from Google Fonts so you can see them. It only fetches fonts; nothing you type is part of the request, and nothing loads until you press it.</p></details>
+      <details><summary>Can I suggest a tool?</summary><p>Please do. Open an issue on <a href="https://github.com/Phawaaaz/devkit/issues" target="_blank" rel="noopener" style="color:var(--accent)">GitHub</a> with what you keep looking up.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2 style="font-size:clamp(30px,4.4vw,52px)">Stop pasting secrets into strangers' websites.</h2>
+    <p class="lede" style="margin:0 auto">Open DevKit, bookmark it, and keep your tokens to yourself.</p>
+    <div class="actions">
+      <a class="btn primary" href="/app/">Open DevKit, it's free</a>
+      <a class="btn" href="https://github.com/Phawaaaz/devkit" target="_blank" rel="noopener">Star on GitHub</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year">2026</span> DevKit · Built by <a href="https://akinola.tech" target="_blank" rel="noopener" style="color:var(--text)">Fawaz Akinola</a> in Lagos</span>
+    <span style="display:flex;gap:18px"><a href="/app/">Open DevKit</a><a href="#tools">Tools</a><a href="#privacy">Privacy</a><a href="https://github.com/Phawaaaz/devkit" target="_blank" rel="noopener">GitHub</a></span>
+  </div>
+</footer>
 </body>
 </html>

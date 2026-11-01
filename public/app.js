@@ -1275,4 +1275,4 @@ $("#theme").addEventListener("click", () => { theme = THEMES[(THEMES.indexOf(the
 applyTheme();
 route();
 
-if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("/sw.js").catch(() => {});

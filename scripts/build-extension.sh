@@ -7,7 +7,7 @@ rm -rf dist/extension && mkdir -p dist/extension/icons
 cp extension/manifest.json extension/background.js dist/extension/
 cp public/app.js public/icon.svg dist/extension/
 # The web manifest and service worker are for the website only.
-sed -e '/rel="manifest"/d' -e '/apple-touch-icon/d' public/index.html > dist/extension/index.html
+sed -e '/rel="manifest"/d' -e '/apple-touch-icon/d' -e 's|<a href="/">About DevKit</a>|<a href="https://devkit-ng.vercel.app/" target="_blank" rel="noopener">About DevKit</a>|' public/app/index.html > dist/extension/index.html
 for s in 16 32 48 128; do sips -z $s $s public/icon-512.png --out dist/extension/icons/$s.png >/dev/null; done
 (cd dist/extension && rm -f ../devkit-extension.zip && zip -qr ../devkit-extension.zip .)
 echo "Built dist/extension and dist/devkit-extension.zip"
