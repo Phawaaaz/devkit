@@ -1,10 +1,10 @@
 # DevKit
 
-20 developer tools that run entirely in your browser: https://devkit-ng.vercel.app
+23 developer tools that run entirely in your browser: https://devkit-ng.vercel.app
 
 JSON · JWT decoder · Base64 · URL · Timestamp · UUID · Hash · Regex tester · Cron explainer · Password ·
 Text diff · JSON to TypeScript · JSON ↔ CSV · Case converter · Color · Number base · HTTP status codes ·
-Fake data (Nigerian test users) · HMAC / webhook signature · cURL to fetch
+Fake data (Nigerian test users) · HMAC / webhook signature · cURL to fetch · Array methods · Font sizes · Font picker
 
 No build step and no dependencies. A Content-Security-Policy (`connect-src 'self'`, no inline scripts)
 means nothing you paste can be sent anywhere. Works offline as a PWA.

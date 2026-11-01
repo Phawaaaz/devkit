@@ -999,6 +999,229 @@ Office: 01-2345678</textarea></div>
       run();
     },
   },
+  {
+    id: "array", tag: "[ ]", name: "Array methods", desc: "Say what you want to do with an array and get the right JavaScript method, with examples.",
+    html: () => `
+      <input class="input" id="q" placeholder="What do you want to do? e.g. remove duplicates, last item, sum, sort by name" autocomplete="off" spellcheck="false">
+      <div class="row" style="margin-top:10px" id="cats"></div>
+      <div class="row"><label><input type="checkbox" id="safe"> Only methods that don't change the original array</label></div>
+      <div class="stack" id="list"></div>`,
+    init(el) {
+      const users = () => [{ name: "Tunde", age: 31, city: "Ibadan" }, { name: "Ada", age: 24, city: "Lagos" }, { name: "Musa", age: 28, city: "Lagos" }];
+      // [category, goal, method, mutates, returns, code, run, note]
+      const M = [
+        ["Add", "Add to the end", "push()", true, "the new length", "const a = [1, 2];\na.push(3);\na", () => { const a = [1, 2]; a.push(3); return a; }],
+        ["Add", "Add to the start", "unshift()", true, "the new length", "const a = [2, 3];\na.unshift(1);\na", () => { const a = [2, 3]; a.unshift(1); return a; }],
+        ["Add", "Add without changing the original", "[...a, x]", false, "a new array", "const a = [1, 2];\nconst b = [...a, 3];\nb", () => [...[1, 2], 3], "Spread copies the array; React state updates need this."],
+        ["Add", "Insert in the middle", "toSpliced()", false, "a new array", "[1, 2, 4].toSpliced(2, 0, 3)", () => [1, 2, 4].toSpliced(2, 0, 3), "splice(2, 0, 3) does the same but changes the original."],
+        ["Add", "Join two arrays", "concat() / spread", false, "a new array", "[...[1, 2], ...[3, 4]]", () => [...[1, 2], ...[3, 4]]],
+        ["Remove", "Remove the last item", "pop()", true, "the removed item", "const a = [1, 2, 3];\na.pop()", () => [1, 2, 3].pop()],
+        ["Remove", "Remove the first item", "shift()", true, "the removed item", "const a = [1, 2, 3];\na.shift()", () => [1, 2, 3].shift()],
+        ["Remove", "Remove items that match a condition", "filter()", false, "a new array", "[5, 1, 4, 2, 3].filter((n) => n > 2)", () => [5, 1, 4, 2, 3].filter((n) => n > 2), "Keeps the items where the function returns true."],
+        ["Remove", "Remove by position", "toSpliced()", false, "a new array", "['a', 'b', 'c'].toSpliced(1, 1)", () => ["a", "b", "c"].toSpliced(1, 1), "splice(1, 1) does the same but changes the original and returns the removed items."],
+        ["Remove", "Remove duplicates", "[...new Set(a)]", false, "a new array", "[...new Set([1, 2, 2, 3, 3, 3])]", () => [...new Set([1, 2, 2, 3, 3, 3])], "Works for strings and numbers. For objects, dedupe by a key with a Map."],
+        ["Remove", "Remove empty / falsy values", "filter(Boolean)", false, "a new array", "[0, 'a', '', null, 'b', undefined].filter(Boolean)", () => [0, "a", "", null, "b", undefined].filter(Boolean), "Careful: this also removes 0 and false."],
+        ["Remove", "Take part of an array", "slice()", false, "a new array", "[1, 2, 3, 4, 5].slice(1, 3)", () => [1, 2, 3, 4, 5].slice(1, 3), "End index is not included. slice(-2) gives the last two."],
+        ["Find", "Find the first item that matches", "find()", false, "the item, or undefined", "users.find((u) => u.city === 'Lagos')", () => users().find((u) => u.city === "Lagos")],
+        ["Find", "Find the position of a match", "findIndex()", false, "the index, or -1", "users.findIndex((u) => u.name === 'Musa')", () => users().findIndex((u) => u.name === "Musa")],
+        ["Find", "Find the last match", "findLast()", false, "the item, or undefined", "[5, 1, 4, 2, 3].findLast((n) => n > 3)", () => [5, 1, 4, 2, 3].findLast((n) => n > 3)],
+        ["Find", "Get the last item", "at(-1)", false, "the item", "[1, 2, 3].at(-1)", () => [1, 2, 3].at(-1), "at() takes negative indexes; a[a.length - 1] is the old way."],
+        ["Find", "Position of a simple value", "indexOf()", false, "the index, or -1", "['ng', 'gh', 'ke'].indexOf('gh')", () => ["ng", "gh", "ke"].indexOf("gh")],
+        ["Check", "Does it contain a value?", "includes()", false, "true / false", "['ng', 'gh'].includes('ng')", () => ["ng", "gh"].includes("ng"), "Use some() for objects: includes compares by reference."],
+        ["Check", "Does any item match?", "some()", false, "true / false", "users.some((u) => u.age < 25)", () => users().some((u) => u.age < 25)],
+        ["Check", "Do all items match?", "every()", false, "true / false", "users.every((u) => u.age >= 18)", () => users().every((u) => u.age >= 18), "Returns true for an empty array."],
+        ["Check", "Is it an array?", "Array.isArray()", false, "true / false", "Array.isArray([1, 2])", () => Array.isArray([1, 2]), "typeof [] is \"object\", so don't use typeof."],
+        ["Transform", "Change every item", "map()", false, "a new array, same length", "[1, 2, 3].map((n) => n * 2)", () => [1, 2, 3].map((n) => n * 2), "Return a value from the function, or you get undefined items."],
+        ["Transform", "Pick one field from objects", "map()", false, "a new array", "users.map((u) => u.name)", () => users().map((u) => u.name)],
+        ["Transform", "Add up / total", "reduce()", false, "one value", "[45000, 12500, 3000].reduce((sum, n) => sum + n, 0)", () => [45000, 12500, 3000].reduce((sum, n) => sum + n, 0), "Always pass the starting value (0), or an empty array throws."],
+        ["Transform", "Group by a key", "Object.groupBy()", false, "an object of arrays", "Object.groupBy(users, (u) => u.city)", () => (Object.groupBy ? Object.groupBy(users(), (u) => u.city) : users().reduce((g, u) => ((g[u.city] ||= []).push(u), g), {}))],
+        ["Transform", "Flatten nested arrays", "flat()", false, "a new array", "[1, [2, [3, [4]]]].flat(Infinity)", () => [1, [2, [3, [4]]]].flat(Infinity), "flat() alone only goes one level deep."],
+        ["Transform", "Map and flatten in one go", "flatMap()", false, "a new array", "['a b', 'c'].flatMap((s) => s.split(' '))", () => ["a b", "c"].flatMap((s) => s.split(" "))],
+        ["Transform", "Turn into a string", "join()", false, "a string", "['Lagos', 'Abuja', 'Kano'].join(', ')", () => ["Lagos", "Abuja", "Kano"].join(", ")],
+        ["Transform", "Make an array of N items", "Array.from()", false, "a new array", "Array.from({ length: 5 }, (_, i) => i + 1)", () => Array.from({ length: 5 }, (_, i) => i + 1)],
+        ["Transform", "Split into chunks", "Array.from() + slice()", false, "an array of arrays", "const size = 2;\nArray.from({ length: Math.ceil(a.length / size) },\n  (_, i) => a.slice(i * size, i * size + size))", () => { const a = [1, 2, 3, 4, 5], size = 2; return Array.from({ length: Math.ceil(a.length / size) }, (_, i) => a.slice(i * size, i * size + size)); }, "Handy for pagination and batching API calls."],
+        ["Transform", "Array of pairs to an object", "Object.fromEntries()", false, "an object", "Object.fromEntries([['ng', 'Nigeria'], ['gh', 'Ghana']])", () => Object.fromEntries([["ng", "Nigeria"], ["gh", "Ghana"]])],
+        ["Order", "Sort numbers", "toSorted()", false, "a new array", "[10, 1, 5, 2].toSorted((a, b) => a - b)", () => [10, 1, 5, 2].toSorted((a, b) => a - b), "Without (a, b) => a - b, numbers sort as text: [1, 10, 2, 5]."],
+        ["Order", "Sort in place", "sort()", true, "the same array, sorted", "const a = [3, 1, 2];\na.sort((x, y) => x - y)", () => [3, 1, 2].sort((x, y) => x - y), "Changes the original. Use toSorted() for a copy."],
+        ["Order", "Sort objects by a text field", "toSorted() + localeCompare", false, "a new array", "users.toSorted((a, b) => a.name.localeCompare(b.name))", () => users().toSorted((a, b) => a.name.localeCompare(b.name)).map((u) => u.name), "Output shows names only. localeCompare handles accents and case properly."],
+        ["Order", "Reverse", "toReversed()", false, "a new array", "[1, 2, 3].toReversed()", () => [1, 2, 3].toReversed(), "reverse() does the same but changes the original."],
+        ["Order", "Shuffle", "Fisher–Yates loop", true, "the same array", "for (let i = a.length - 1; i > 0; i--) {\n  const j = Math.floor(Math.random() * (i + 1));\n  [a[i], a[j]] = [a[j], a[i]];\n}", () => { const a = [1, 2, 3, 4, 5]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }, "Don't use sort(() => Math.random() - 0.5); it isn't evenly random."],
+        ["Replace", "Replace one item, keep the original", "with()", false, "a new array", "['a', 'b', 'c'].with(1, 'B')", () => ["a", "b", "c"].with(1, "B")],
+        ["Replace", "Update one object in a list", "map()", false, "a new array", "users.map((u) => u.name === 'Ada' ? { ...u, age: 25 } : u)", () => users().map((u) => (u.name === "Ada" ? { ...u, age: 25 } : u)).map((u) => `${u.name} ${u.age}`), "Output shows name and age. The usual way to update React state."],
+        ["Replace", "Fill with one value", "fill()", true, "the same array", "new Array(3).fill(0)", () => new Array(3).fill(0)],
+        ["Loop", "Do something for each item", "for...of", false, "nothing", "for (const u of users) {\n  console.log(u.name);\n}", () => users().map((u) => u.name).join("\n"), "Unlike forEach, you can break, continue and await inside it."],
+        ["Loop", "Loop with the index", "entries()", false, "an iterator of [index, item]", "for (const [i, city] of ['Lagos', 'Kano'].entries()) {\n  console.log(i, city);\n}", () => [...["Lagos", "Kano"].entries()].map(([i, c]) => `${i} ${c}`).join("\n")],
+        ["Loop", "Run async work for every item", "Promise.all + map", false, "a promise of an array", "const results = await Promise.all(\n  ids.map((id) => fetchUser(id))\n);", () => "[user1, user2, user3]  // all at once", "forEach doesn't wait for async functions. For one at a time, use for...of with await."],
+      ];
+      const CATS = ["All", ...new Set(M.map((m) => m[0]))];
+      let cat = "All";
+      $("#cats", el).innerHTML = CATS.map((c) => `<button class="btn${c === cat ? " on" : ""}" data-cat="${c}">${c}</button>`).join("");
+      const show = (v) => (v === undefined ? "undefined" : typeof v === "string" ? (v.includes("\n") ? v : JSON.stringify(v)) : JSON.stringify(v, null, v && typeof v === "object" && JSON.stringify(v).length > 60 ? 2 : 0));
+      const run = () => {
+        const q = $("#q", el).value.trim().toLowerCase(), words = q.split(/\s+/).filter(Boolean), safe = $("#safe", el).checked;
+        const hits = M.filter(([c, goal, method, mut, ret, code, , note]) => (cat === "All" || c === cat) && (!safe || !mut) && words.every((w) => `${c} ${goal} ${method} ${ret} ${note || ""}`.toLowerCase().includes(w)));
+        $("#list", el).innerHTML = hits.map(([c, goal, method, mut, ret, code, fn, note]) => {
+          let out; try { out = show(fn()); } catch (e) { out = "Not supported in this browser yet"; }
+          return `<div class="box"><div class="box-head"><span style="color:var(--text);font-size:14.5px">${esc(goal)}</span><div class="acts"><span class="pill">${esc(c)}</span><span class="pill ${mut ? "bad" : "ok"}">${mut ? "changes original" : "safe copy"}</span></div></div>
+            <div style="padding:12px 14px;display:grid;gap:8px"><div><code style="font:600 15px var(--mono);color:var(--accent)">${esc(method)}</code> <small style="color:var(--muted)">returns ${esc(ret)}</small></div>
+            <div class="grid2" style="gap:10px"><pre class="out" style="min-height:0;padding:10px;background:var(--panel-2);border-radius:8px;resize:none">${esc(code)}</pre><pre class="out" style="min-height:0;padding:10px;background:var(--panel-2);border-radius:8px;resize:none"><span style="color:var(--muted)">// result\n</span>${esc(out)}</pre></div>
+            ${note ? `<small style="color:var(--muted)">${esc(note)}</small>` : ""}</div></div>`;
+        }).join("") || `<p style="color:var(--muted)">Nothing matches. Try words like add, remove, find, sort, sum, unique.</p>`;
+      };
+      $("#q", el).addEventListener("input", run); $("#safe", el).addEventListener("change", run);
+      $("#cats", el).addEventListener("click", (e) => { const b = e.target.closest("[data-cat]"); if (!b) return; cat = b.dataset.cat; $$("[data-cat]", el).forEach((x) => x.classList.toggle("on", x === b)); run(); });
+      run();
+    },
+  },
+  {
+    id: "type-scale", tag: "px", name: "Font sizes", desc: "Pick a base size and ratio and get every heading and text size in px and rem, with line heights.",
+    html: () => `
+      <div class="row">
+        <label>Base <input class="input" id="base" type="number" min="10" max="32" value="16" style="width:76px;height:30px"> px</label>
+        <label>Ratio <select class="btn" id="ratio">
+          <option value="1.125">1.125 Major second (dense apps)</option><option value="1.2">1.2 Minor third (dashboards)</option>
+          <option value="1.25" selected>1.25 Major third (most sites)</option><option value="1.333">1.333 Perfect fourth (marketing)</option>
+          <option value="1.5">1.5 Perfect fifth (bold landing pages)</option><option value="1.618">1.618 Golden ratio (editorial)</option></select></label>
+        <label><input type="checkbox" id="fluid"> Fluid: grow from phone to desktop</label>
+      </div>
+      <div class="row" id="fluid-row" hidden>
+        <label>Phone base <input class="input" id="mbase" type="number" min="10" max="32" value="16" style="width:70px;height:30px"></label>
+        <label>Phone ratio <select class="btn" id="mratio"><option value="1.125">1.125</option><option value="1.2" selected>1.2</option><option value="1.25">1.25</option></select></label>
+        <small style="color:var(--muted)">Scales between 360px and 1280px wide screens.</small>
+      </div>
+      <div class="row"><input class="input" id="sample" value="Track every naira, automatically" style="max-width:420px" aria-label="Preview text"></div>
+      <div class="box"><div class="box-head">Scale</div><div id="scale" style="overflow-x:auto"></div></div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="box"><div class="box-head">CSS<div class="acts"><button class="btn" data-copy="#css">Copy</button></div></div><pre class="out small" id="css"></pre></div>
+        <div class="box"><div class="box-head">Tailwind (tailwind.config.js)<div class="acts"><button class="btn" data-copy="#tw">Copy</button></div></div><pre class="out small" id="tw"></pre></div>
+      </div>
+      <div class="box" style="margin-top:16px"><div class="box-head">Rules of thumb</div><ul class="list" style="font-family:inherit">
+        <li><span>Body text: <b>16px</b> minimum on the web, <b>17–18px</b> for long reading (blogs, docs).</span></li>
+        <li><span>Form inputs on phones: <b>16px or more</b>, or iPhone zooms in when you tap them.</span></li>
+        <li><span>Captions, labels, table text: <b>12–14px</b>. Never below 12px.</span></li>
+        <li><span>Line height: <b>1.5–1.7</b> for body, <b>1.1–1.3</b> for big headings.</span></li>
+        <li><span>Line length: <b>45–75 characters</b>. In CSS: <code>max-width: 65ch</code>.</span></li>
+        <li><span>Use <b>rem</b> for font sizes so they respect the user's browser text-size setting.</span></li>
+        <li><span>Stick to 4–6 sizes and 2–3 weights. Contrast comes from size and weight together, not more sizes.</span></li>
+      </ul></div>`,
+    init(el) {
+      const STEPS = [["xs", -2, "Fine print, badges"], ["sm", -1, "Captions, labels, table text"], ["base", 0, "Body text, inputs, buttons"], ["lg", 1, "Lead paragraph, card titles"], ["xl", 2, "H4 / section titles"], ["2xl", 3, "H3"], ["3xl", 4, "H2"], ["4xl", 5, "H1 in apps"], ["5xl", 6, "Hero headline"]];
+      const lh = (px) => (px <= 14 ? 1.5 : px <= 20 ? 1.6 : px <= 28 ? 1.35 : px <= 40 ? 1.2 : 1.1);
+      const r2 = (n) => Math.round(n * 100) / 100, r3 = (n) => Math.round(n * 1000) / 1000;
+      ["base", "ratio", "fluid", "mbase", "mratio", "sample"].forEach((k) => { const v = store.get("ts-" + k, null); if (v !== null) { const i = $("#" + k, el); i.type === "checkbox" ? (i.checked = v) : (i.value = v); } });
+      const run = () => {
+        ["base", "ratio", "fluid", "mbase", "mratio", "sample"].forEach((k) => { const i = $("#" + k, el); store.set("ts-" + k, i.type === "checkbox" ? i.checked : i.value); });
+        const base = Math.min(32, Math.max(10, +$("#base", el).value || 16)), ratio = +$("#ratio", el).value, fluid = $("#fluid", el).checked;
+        const mbase = Math.min(32, Math.max(10, +$("#mbase", el).value || 16)), mratio = +$("#mratio", el).value;
+        $("#fluid-row", el).hidden = !fluid;
+        const rows = STEPS.map(([name, step, use]) => {
+          // Nothing below 12px: smaller text isn't readable.
+          const max = Math.max(12, base * ratio ** step), min = fluid ? Math.min(max, Math.max(12, mbase * mratio ** step)) : max;
+          // clamp(min, intercept + slope·vw, max) between 360px and 1280px viewports
+          const slope = (max - min) / (1280 - 360), icpt = min - slope * 360;
+          const css = fluid && Math.abs(max - min) > 0.3 ? `clamp(${r3(min / 16)}rem, ${r3(icpt / 16)}rem + ${r2(slope * 100)}vw, ${r3(max / 16)}rem)` : `${r3(max / 16)}rem`;
+          return { name, use, min, max, css, lh: lh(max) };
+        });
+        const sample = esc($("#sample", el).value || "The quick brown fox");
+        $("#scale", el).innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13.5px">${rows.map((r) => `<tr style="border-top:1px solid var(--line)">
+          <td style="padding:10px 14px;white-space:nowrap;vertical-align:top"><b style="font-family:var(--mono)">${r.name}</b><br><small style="color:var(--muted)">${r.use}</small></td>
+          <td style="padding:10px 8px;white-space:nowrap;vertical-align:top;font-family:var(--mono)">${fluid ? `${r2(r.min)}→${r2(r.max)}px` : `${r2(r.max)}px`}<br><small style="color:var(--muted)">${fluid ? "fluid" : r3(r.max / 16) + "rem"} · lh ${r.lh}</small></td>
+          <td style="padding:10px 14px;width:100%"><div data-size="${r.max}" data-lh="${r.lh}" style="font-weight:${r.max >= 24 ? 700 : 400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:560px">${sample}</div></td></tr>`).join("")}</table>`;
+        $$("[data-size]", el).forEach((d) => { d.style.fontSize = Math.min(+d.dataset.size, 72) + "px"; d.style.lineHeight = d.dataset.lh; });
+        $("#css", el).textContent = `:root {\n${rows.map((r) => `  --text-${r.name}: ${r.css};`).join("\n")}\n}\n\nbody { font-size: var(--text-base); line-height: 1.6; }\nh1 { font-size: var(--text-4xl); line-height: ${rows[7].lh}; }\nh2 { font-size: var(--text-3xl); line-height: ${rows[6].lh}; }\nh3 { font-size: var(--text-2xl); line-height: ${rows[5].lh}; }\nsmall { font-size: var(--text-sm); }`;
+        $("#tw", el).textContent = `// tailwind.config.js → theme.extend\nfontSize: {\n${rows.map((r) => `  ${/^\d/.test(r.name) ? `"${r.name}"` : r.name}: ["${r.css}", { lineHeight: "${r.lh}" }],`).join("\n")}\n},`;
+      };
+      $$("input, select", el).forEach((i) => i.addEventListener("input", run));
+      run();
+    },
+  },
+  {
+    id: "fonts", tag: "Ff", name: "Font picker", desc: "Tell it what you're building and get fonts and pairings that fit, with ready-to-paste CSS.",
+    html: () => `
+      <div class="row" id="uses"></div>
+      <div class="row"><label>Style <select class="btn" id="style"><option value="">Any</option><option>Sans</option><option>Serif</option><option>Mono</option><option>Display</option></select></label>
+        <input class="input" id="sample" value="₦45,000 received from Chioma" style="max-width:320px;height:30px" aria-label="Preview text">
+        <button class="btn" id="load">Show real previews</button></div>
+      <p style="color:var(--muted);font-size:13px;margin:-4px 0 14px" id="load-note">Previews use your system fonts until you press <b>Show real previews</b>, which downloads the fonts from Google Fonts. Nothing you type is sent.</p>
+      <h3 style="margin:6px 0 10px;font-size:15px">Pairings</h3><div class="home-grid" id="pairs"></div>
+      <h3 style="margin:22px 0 10px;font-size:15px">Fonts</h3><div class="home-grid" id="fonts"></div>
+      <div class="box" style="margin-top:16px"><div class="box-head">Use it<div class="acts"><button class="btn" data-copy="#code">Copy</button></div></div><pre class="out small" id="code">Click a font or pairing above.</pre></div>`,
+    init(el) {
+      const USES = { app: "Web app / dashboard", fintech: "Fintech / banking", landing: "Landing page / startup", blog: "Blog / docs / long reading", brand: "Friendly brand / kids / food", luxury: "Luxury / fashion / events", dev: "Developer / code", };
+      // [name, style, weights, uses, why, fallback]
+      const F = [
+        ["Inter", "Sans", "400;500;600;700", ["app", "fintech", "landing", "dev"], "Built for screens. Very readable at small sizes; the safe default for UIs.", "system-ui, sans-serif"],
+        ["Plus Jakarta Sans", "Sans", "400;500;600;700;800", ["fintech", "landing", "app"], "Modern and confident with friendly curves. Popular with African fintechs.", "system-ui, sans-serif"],
+        ["DM Sans", "Sans", "400;500;700", ["app", "landing", "brand"], "Clean, slightly geometric, good at every size.", "system-ui, sans-serif"],
+        ["Manrope", "Sans", "400;500;600;700;800", ["fintech", "app", "landing"], "Precise and techy; numbers look sharp in dashboards.", "system-ui, sans-serif"],
+        ["Poppins", "Sans", "400;500;600;700", ["brand", "landing"], "Round and friendly. Great for headings; a bit wide for long body text.", "system-ui, sans-serif"],
+        ["Montserrat", "Sans", "400;500;600;700;800", ["landing", "luxury", "brand"], "Bold, wide headings with poster energy.", "system-ui, sans-serif"],
+        ["Outfit", "Sans", "300;400;500;600;700", ["landing", "brand"], "Geometric and modern; looks great large and light.", "system-ui, sans-serif"],
+        ["Space Grotesk", "Sans", "400;500;700", ["dev", "landing"], "Quirky tech character for headings. Pair with Inter for body.", "system-ui, sans-serif"],
+        ["IBM Plex Sans", "Sans", "400;500;600;700", ["app", "dev", "fintech"], "Corporate but warm; part of a family with matching serif and mono.", "system-ui, sans-serif"],
+        ["Nunito", "Sans", "400;600;700;800", ["brand"], "Soft rounded ends; feels kind and approachable.", "system-ui, sans-serif"],
+        ["Source Sans 3", "Sans", "400;600;700", ["blog", "app"], "Adobe's workhorse. Calm and very readable in long text.", "system-ui, sans-serif"],
+        ["Bricolage Grotesque", "Display", "400;600;800", ["landing", "brand"], "Characterful display grotesque that makes headlines memorable.", "system-ui, sans-serif"],
+        ["Merriweather", "Serif", "400;700", ["blog"], "Designed for reading on screens; sturdy and comfortable.", "Georgia, serif"],
+        ["Lora", "Serif", "400;500;600;700", ["blog", "brand"], "Elegant body serif with gentle curves.", "Georgia, serif"],
+        ["Source Serif 4", "Serif", "400;600;700", ["blog"], "Clear, modern serif for articles and docs.", "Georgia, serif"],
+        ["Playfair Display", "Serif", "400;600;700;800", ["luxury", "blog"], "High-contrast, fashion-magazine headlines. Headings only.", "Georgia, serif"],
+        ["Fraunces", "Serif", "400;600;700;900", ["brand", "luxury", "landing"], "Warm, soft serif with personality. Lovely for food and lifestyle brands.", "Georgia, serif"],
+        ["DM Serif Display", "Serif", "400", ["luxury", "landing"], "Sharp, elegant display serif for big titles.", "Georgia, serif"],
+        ["Cormorant Garamond", "Serif", "400;500;600;700", ["luxury"], "Refined and classic: weddings, events, premium brands.", "Georgia, serif"],
+        ["JetBrains Mono", "Mono", "400;500;700", ["dev"], "Made for code: tall letters, clear 0/O and 1/l.", "ui-monospace, monospace"],
+        ["Fira Code", "Mono", "400;500;700", ["dev"], "Code font with ligatures (=> and !== drawn as one symbol).", "ui-monospace, monospace"],
+        ["IBM Plex Mono", "Mono", "400;500;600", ["dev", "fintech"], "Mono with character; nice for numbers and tables.", "ui-monospace, monospace"],
+      ];
+      const P = [
+        ["Playfair Display", "Inter", ["luxury", "blog", "landing"], "Classic editorial: dramatic serif headlines, clean sans body."],
+        ["Space Grotesk", "Inter", ["dev", "landing", "app"], "Tech startup: quirky headings, very readable UI text."],
+        ["Fraunces", "DM Sans", ["brand", "landing"], "Warm and friendly brand with a modern body."],
+        ["Plus Jakarta Sans", "Plus Jakarta Sans", ["fintech", "app", "landing"], "One family for everything; weights do the work. Clean fintech look."],
+        ["Merriweather", "Source Sans 3", ["blog"], "Built for reading: sturdy serif titles, calm body."],
+        ["Montserrat", "Lora", ["brand", "blog"], "Bold sans headings over an elegant serif body."],
+        ["DM Serif Display", "DM Sans", ["luxury", "landing"], "Matched family: elegant titles, simple body."],
+        ["Inter", "JetBrains Mono", ["dev", "app"], "Docs and dev tools: UI in Inter, code in JetBrains Mono."],
+        ["Poppins", "Nunito", ["brand"], "Round and playful: kids, food, community apps."],
+        ["Bricolage Grotesque", "Inter", ["landing", "brand"], "Memorable headlines without hurting readability."],
+        ["Cormorant Garamond", "Montserrat", ["luxury"], "Wedding and event invites, premium fashion."],
+        ["Manrope", "IBM Plex Mono", ["fintech", "app"], "Dashboards with lots of numbers: crisp UI, tabular figures."],
+      ];
+      const byName = Object.fromEntries(F.map((f) => [f[0], f]));
+      let use = store.get("font-use", "fintech"), loaded = false;
+      $("#uses", el).innerHTML = Object.entries(USES).map(([k, v]) => `<button class="btn${k === use ? " on" : ""}" data-use="${k}">${v}</button>`).join("");
+      const stack = (n) => `"${n}", ${byName[n][5]}`;
+      const link = (names) => `https://fonts.googleapis.com/css2?${[...new Set(names)].map((n) => `family=${n.replace(/ /g, "+")}:wght@${byName[n][2]}`).join("&")}&display=swap`;
+      const setCode = (head, body) => {
+        const names = [...new Set([head, body])];
+        $("#code", el).textContent = `<!-- In <head> -->\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="${link(names)}" rel="stylesheet">\n\n/* CSS */\nbody { font-family: ${stack(body)}; }\nh1, h2, h3 { font-family: ${stack(head)}; }\n\n// Next.js (app/layout.tsx)\nimport { ${names.map((n) => n.replace(/ /g, "_")).join(", ")} } from "next/font/google";\n\n// Tailwind → theme.extend.fontFamily\nfontFamily: {\n  ${byName[body][1] === "Serif" ? "serif" : byName[body][1] === "Mono" ? "mono" : "sans"}: [${JSON.stringify(body)}, ...defaultTheme.fontFamily.${byName[body][1] === "Serif" ? "serif" : byName[body][1] === "Mono" ? "mono" : "sans"}],${head !== body ? `\n  display: [${JSON.stringify(head)}, ...defaultTheme.fontFamily.${byName[head][1] === "Serif" ? "serif" : byName[head][1] === "Mono" ? "mono" : "sans"}],` : ""}\n},`;
+      };
+      const run = () => {
+        const style = $("#style", el).value, sample = esc($("#sample", el).value || "The quick brown fox");
+        const pairs = P.filter((p) => p[2].includes(use) && (!style || [byName[p[0]][1], byName[p[1]][1]].includes(style)));
+        $("#pairs", el).innerHTML = pairs.map(([h, b, , why]) => `<a href="#" data-pair="${h}|${b}"><b data-font="${h}" style="font-size:22px;line-height:1.2">${sample}</b><span data-font="${b}" style="font-size:14.5px">Body text in ${esc(b)}. Readable at small sizes, with clear numbers: 0123456789.</span><small><b>${esc(h)}</b> + <b>${esc(b)}</b> · ${esc(why)}</small></a>`).join("") || `<p style="color:var(--muted)">No pairing for this filter.</p>`;
+        const fonts = F.filter((f) => f[3].includes(use) && (!style || f[1] === style));
+        $("#fonts", el).innerHTML = fonts.map(([n, s, w, , why]) => `<a href="#" data-one="${n}"><b><span>${s}</span>${esc(n)}</b><span data-font="${n}" style="font-size:20px;line-height:1.3">${sample}</span><small>${esc(why)} Weights: ${w.split(";").join(", ")}.</small></a>`).join("") || `<p style="color:var(--muted)">No font for this filter.</p>`;
+        $$("[data-font]", el).forEach((d) => (d.style.fontFamily = stack(d.dataset.font)));
+      };
+      el.addEventListener("click", (e) => {
+        const u = e.target.closest("[data-use]"), p = e.target.closest("[data-pair]"), o = e.target.closest("[data-one]");
+        if (u) { use = u.dataset.use; store.set("font-use", use); $$("[data-use]", el).forEach((x) => x.classList.toggle("on", x === u)); run(); }
+        if (p) { e.preventDefault(); const [h, b] = p.dataset.pair.split("|"); setCode(h, b); $("#code", el).scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+        if (o) { e.preventDefault(); setCode(o.dataset.one, o.dataset.one); $("#code", el).scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+      });
+      $("#load", el).addEventListener("click", () => {
+        if (loaded) return;
+        loaded = true;
+        const l = Object.assign(document.createElement("link"), { rel: "stylesheet", href: link(F.map((f) => f[0])) });
+        l.onerror = () => { $("#load-note", el).textContent = "Couldn't load Google Fonts (offline?). Showing system fonts."; };
+        document.head.append(l);
+        $("#load", el).textContent = "Real previews on"; $("#load", el).classList.add("on");
+      });
+      $("#style", el).addEventListener("change", run); $("#sample", el).addEventListener("input", run);
+      run(); setCode(P.find((p) => p[2].includes(use))?.[0] || "Inter", P.find((p) => p[2].includes(use))?.[1] || "Inter");
+    },
+  },
 ];
 const byId = Object.fromEntries(TOOLS.map((t) => [t.id, t]));
 
